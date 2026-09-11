@@ -9,9 +9,11 @@
   }
   async function ensurePostOffice(){
     const el=$("postOffice");
-    if(!el||el.textContent.trim()!=="—")return;
+    if(!el)return;
+    const state=el.textContent.trim();
+    if(state!=="—"&&state!=="Finding post office…"&&state!=="Not available")return;
     const text=[$("addressLine3")?.textContent||"",$("placeName")?.textContent||""].join(" ");
-    const m=text.match(/\b(\d{6})\b/); if(!m)return;
+    const m=text.match(/\b(\d{6})\b/);if(!m)return;
     const pin=m[1],key="gpsViewer.postOffice."+pin,cached=localGet(key);
     if(cached?.name){el.textContent=cached.name;return}
     if(!navigator.onLine)return;
@@ -41,7 +43,6 @@
     });
   };
 
-  /* Same-tab HERE result links. */
   window.placeListHTML=function(places){
     const arr=Array.isArray(places)?places:[];
     return '<div class="place-list large">'+arr.slice(0,20).map(x=>{
@@ -53,7 +54,6 @@
     }).join("")+"</div>";
   };
 
-  /* Undo v13 fixed positioning: tabs go below weather and footer below tabs. */
   const css=document.createElement("style");
   css.textContent=`
     html,body{height:auto!important;min-height:100%!important;background:linear-gradient(145deg,#3fb8f0 0%,#8bdcf8 50%,#d7f4ff 100%)!important}
