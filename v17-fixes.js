@@ -37,6 +37,21 @@
       (navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   }
 
+  /* Give the main LOCATION screen one fresh high-accuracy reading on startup
+     and when returning to the foreground. This avoids using an old Safari/IP
+     position when the device can provide a better GPS reading. */
+  async function refreshHomeGPS(){
+    if(document.hidden||!navigator.geolocation)return;
+    try{
+      const pos=await freshPosition();
+      const acc=Number(pos.coords.accuracy);
+      if(!Number.isFinite(acc)||acc>500)return;
+      if(typeof window.updatePosition==="function")window.updatePosition(pos);
+    }catch(e){}
+  }
+  setTimeout(refreshHomeGPS,1200);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)setTimeout(refreshHomeGPS,800)});
+
   async function openFreshGoogleMapsSearch(query){
     const q=String(query||"").trim();
     if(!q)return;
