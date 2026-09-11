@@ -30,26 +30,106 @@ function blink(id,text){const el=$(id);el.textContent=text;el.classList.add("loa
 function stopBlink(id){$(id)?.classList.remove("loading-blink")}
 function apiUrl(path,params){const u=new URL(API_BASE.replace(/\/$/,"")+path);Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,v));u.searchParams.set("_",Date.now().toString());return u.toString()}
 async function fetchJSON(url,timeout=15000){const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),timeout);try{const r=await fetch(url,{cache:"no-store",signal:ctl.signal,headers:{Accept:"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);const type=r.headers.get("content-type")||"";if(!type.includes("json"))throw new Error("Non-JSON response");return await r.json()}finally{clearTimeout(t)}}
+function firstObject(...xs){return xs.find(x=>x&&typeof x==="object")||{}}
+function normalizeAddress(d){
+  return firstObject(
+    d?.address,
+    d?.location?.address,
+    d?.result?.address,
+    d?.reverse?.address,
+    d?.data?.address
+  )
+}
+function normalizePrimary(d){
+  return firstObject(
+    d?.primaryLocation,
+    d?.primaryPlace,
+    d?.place,
+    d?.location?.place,
+    d?.result?.primaryLocation,
+    d?.data?.primaryLocation
+  )
+}
+function findPostOfficeValue(d,a){
+  const direct=[
+    d?.postOffice,d?.postOfficeName,d?.postalOffice,d?.postalOfficeName,
+    a?.postOffice,a?.postOfficeName,a?.postalOffice,a?.postalOfficeName,
+    a?.postalName,a?.postalTown
+  ].find(v=>typeof v==="string"&&v.trim());
+  if(direct)return direct.trim();
+
+  const pool=[
+    ...(Array.isArray(d?.places)?d.places:[]),
+    ...(Array.isArray(d?.nearbyPlaces)?d.nearbyPlaces:[]),
+    ...(Array.isArray(d?.results)?d.results:[])
+  ];
+  const po=pool.find(x=>{
+    const t=String(x?.type||x?.category||x?.categories?.[0]||"").toLowerCase();
+    const n=String(x?.name||"").toLowerCase();
+    return t.includes("post")||t.includes("postal")||n.includes("post office")||n.includes("postoffice")||n.includes("p.o.");
+  });
+  return po?.name||"";
+}
 function renderPlace(d,source="LIVE"){
   stopBlink("addressLine2");stopBlink("addressLine3");
-  const p=d?.primaryLocation;
-  const a=d?.address||{};
-  if(p?.name){$("placeName").textContent=p.name; $("placeIcon").textContent=placeEmoji(p.type); }
-  else {$("placeName").textContent=a.label||"Location identified"; $("placeIcon").textContent="⌖"}
-  const road=a.street||d?.road?.street||"";
-  const local=a.district||a.city||"";
-  const city=a.city||a.county||"";
-  const state=a.state||"";
-  const pin=a.postalCode||"";
-  const line2=[a.houseNumber,road].filter(Boolean).join(" ");
-  const line3=[local,city!==local?city:"",state,pin].filter(Boolean).join(", ").replace(", "+pin," - "+pin);
+  const p=normalizePrimary(d);
+  const a=normalizeAddress(d);
+  const label=String(a?.label||d?.label||d?.displayName||"").trim();
+
+  if(p?.name){
+    $("placeName").textContent=p.name;
+    $("placeIcon").textContent=placeEmoji(p.type||p.category||"");
+  }else{
+    $("placeName").textContent=label||"Location identified";
+    $("placeIcon").textContent="⌖";
+  }
+
+  const road=a?.street||a?.road||a?.streetName||d?.road?.street||"";
+  const house=a?.houseNumber||a?.house||"";
+  const locality=a?.district||a?.subdistrict||a?.subDistrict||a?.locality||a?.neighbourhood||a?.neighborhood||"";
+  const city=a?.city||a?.town||a?.county||"";
+  const state=a?.state||a?.stateName||"";
+  const pin=a?.postalCode||a?.postcode||a?.postal_code||"";
+
+  let line2=[house,road].filter(Boolean).join(" ").trim();
+  if(!line2&&label){
+    const first=label.split(",")[0]?.trim();
+    if(first&&first!==p?.name)line2=first;
+  }
+  const placeParts=[locality,city!==locality?city:"",state].filter(Boolean);
+  let line3=placeParts.join(", ");
+  if(pin)line3=line3?`${line3} - ${pin}`:String(pin);
+
   $("addressLine2").textContent=line2||"";
-  $("addressLine3").textContent=line3||"";
-  $("postOffice").textContent=(local||city||"—")+(pin?" ("+pin+")":"");
-  saveLocal(lastAddressKey,{...a,line2,line3});
+  $("addressLine3").textContent=line3||label||"";
+  const po=findPostOfficeValue(d,a);
+  $("postOffice").textContent=po||(pin?"Finding post office…":"—");
+
+  saveLocal(lastAddressKey,{...a,line2,line3,label});
   saveLocal(lastPlaceKey,{primaryLocation:p,address:a});
   const suffix=source==="LIVE"?(p?.distanceM!=null?` ${Math.round(p.distanceM)} m`:""):" • OFFLINE CACHE";
   $("addressLine3").title=source+suffix;
+
+  if(pin) fetchPostOffice(pin);
+}
+async function fetchPostOffice(pin){
+  const p=String(pin||"").trim();
+  if(!/^\d{6}$/.test(p))return;
+  const cacheKey="gpsViewer.postOffice."+p;
+  const cached=loadLocal(cacheKey);
+  if(cached?.name){$("postOffice").textContent=cached.name;return}
+  if(!navigator.onLine||!dataEnabled)return;
+  try{
+    const j=await fetchJSON(`https://api.postalpincode.in/pincode/${encodeURIComponent(p)}`,10000);
+    const rows=Array.isArray(j)&&Array.isArray(j[0]?.PostOffice)?j[0].PostOffice:[];
+    if(rows.length){
+      const preferred=rows.find(x=>String(x?.BranchType||"").toLowerCase().includes("sub office"))||rows[0];
+      const name=preferred?.Name?`${preferred.Name}${preferred.Pincode?` (${preferred.Pincode})`:""}`:"";
+      if(name){$("postOffice").textContent=name;saveLocal(cacheKey,{name})}
+    }else if($("postOffice").textContent==="Finding post office…")$("postOffice").textContent="Not available";
+  }catch(e){
+    if($("postOffice").textContent==="Finding post office…")$("postOffice").textContent="Not available";
+  }
 }
 function placeEmoji(type=""){
   const t=String(type).toLowerCase();
@@ -67,7 +147,14 @@ function placeEmoji(type=""){
 }
 function loadLastAddress(){
   const d=loadLocal(lastAddressKey), p=loadLocal(lastPlaceKey);
-  if(d){$("placeName").textContent=p?.primaryLocation?.name||d.label||"Last known location";$("addressLine2").textContent=d.line2||d.street||"";$("addressLine3").textContent=d.line3||"";$("postOffice").textContent=(d.city||d.district||"—")+(d.postalCode?" ("+d.postalCode+")":"")}
+  if(d){
+    $("placeName").textContent=p?.primaryLocation?.name||d.label||"Last known location";
+    $("addressLine2").textContent=d.line2||d.street||"";
+    $("addressLine3").textContent=d.line3||"";
+    const pin=d.postalCode||d.postcode||"";
+    const po=loadLocal(pin?"gpsViewer.postOffice."+pin:"");
+    $("postOffice").textContent=po?.name||"—";
+  }
 }
 async function reverseGeocode(lat,lon){
   if(!navigator.onLine){setDataState(dataEnabled?"weak":"off");return false}
@@ -192,9 +279,9 @@ function showTab(tab){
   view.hidden=false;
   if(tab==="map"){
     const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
-    if(lat==null){c.innerHTML='<h2>Map</h2><p class="loading-blink">Waiting for GPS location…</p>';return}
+    if(lat==null){c.innerHTML='<h2>MAP</h2><p class="loading-blink">Waiting for GPS location…</p>';return}
     const bbox=`${lon-0.008},${lat-0.006},${lon+0.008},${lat+0.006}`;
-    c.innerHTML=`<h2>Map</h2><iframe class="fullscreen-map" title="OpenStreetMap" src="https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${lat}%2C${lon}"></iframe><div class="map-actions"><a target="_blank" rel="noopener" href="https://mappls.com/@${lat.toFixed(6)},${lon.toFixed(6)}">Mappls</a><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${lat},${lon}">Google Maps</a><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}">OpenStreetMap</a></div>`;
+    c.innerHTML=`<div class="map-title"><h2>MAP</h2><span class="map-current">Current GPS position</span></div><iframe class="fullscreen-map" title="OpenStreetMap" src="https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${lat}%2C${lon}"></iframe><div class="map-actions"><a target="_blank" rel="noopener" href="https://mappls.com/@${lat.toFixed(6)},${lon.toFixed(6)}">Mappls</a><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${lat},${lon}">Google Maps</a><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}">OpenStreetMap</a></div>`;
   }else if(tab==="places"){
     renderPlacesScreen(c);
   }
@@ -204,23 +291,63 @@ function closeFullScreen(){
   currentTab="location";
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab==="location"));
 }
+const PLACE_CATEGORIES=[{"name":"Accounting","icon":"📊"},{"name":"Airport","icon":"✈️"},{"name":"Amusement park","icon":"🎢"},{"name":"Aquarium","icon":"🐠"},{"name":"Art gallery","icon":"🖼️"},{"name":"ATM","icon":"🏧"},{"name":"Bakery","icon":"🥐"},{"name":"Bank","icon":"🏦"},{"name":"Bar","icon":"🍸"},{"name":"Beauty salon","icon":"💄"},{"name":"Bicycle store","icon":"🚲"},{"name":"Book store","icon":"📚"},{"name":"Bowling alley","icon":"🎳"},{"name":"Bus station","icon":"🚌"},{"name":"Cafe","icon":"☕"},{"name":"Campground","icon":"⛺"},{"name":"Car dealer","icon":"🚗"},{"name":"Car rental","icon":"🚙"},{"name":"Car repair","icon":"🔧"},{"name":"Car wash","icon":"🚿"},{"name":"Casino","icon":"🎰"},{"name":"Cemetery","icon":"⚰️"},{"name":"Church","icon":"⛪"},{"name":"City hall","icon":"🏛️"},{"name":"Clothing store","icon":"👕"},{"name":"Convenience store","icon":"🏪"},{"name":"Dentist","icon":"🦷"},{"name":"Department store","icon":"🏬"},{"name":"Doctor","icon":"🩺"},{"name":"Drugstore","icon":"💊"},{"name":"Electrician","icon":"⚡"},{"name":"Electronics store","icon":"📱"},{"name":"Embassy","icon":"🏳️"},{"name":"Fire station","icon":"🚒"},{"name":"Florist","icon":"💐"},{"name":"Funeral home","icon":"🕊️"},{"name":"Furniture store","icon":"🛋️"},{"name":"Gas station","icon":"⛽"},{"name":"Gym","icon":"🏋️"},{"name":"Hair care","icon":"✂️"},{"name":"Hardware store","icon":"🔨"},{"name":"Hindu temple","icon":"🛕"},{"name":"Home goods store","icon":"🪑"},{"name":"Hospital","icon":"🏥"},{"name":"Insurance agency","icon":"🛡️"},{"name":"Jewelry store","icon":"💍"},{"name":"Laundry","icon":"🧺"},{"name":"Lawyer","icon":"⚖️"},{"name":"Library","icon":"📖"},{"name":"Light rail station","icon":"🚊"},{"name":"Liquor store","icon":"🍾"},{"name":"Local government office","icon":"🏢"},{"name":"Locksmith","icon":"🔑"},{"name":"Lodging","icon":"🏨"},{"name":"Meal delivery","icon":"🛵"},{"name":"Meal takeaway","icon":"🥡"},{"name":"Mosque","icon":"🕌"},{"name":"Movie theater","icon":"🍿"},{"name":"Moving company","icon":"📦"},{"name":"Museum","icon":"🏛️"},{"name":"Night club","icon":"🕺"},{"name":"Painter","icon":"🎨"},{"name":"Park","icon":"🌳"},{"name":"Parking","icon":"🅿️"},{"name":"Pet store","icon":"🐾"},{"name":"Pharmacy","icon":"💊"},{"name":"Physiotherapist","icon":"🧘"},{"name":"Plumber","icon":"🔧"},{"name":"Police","icon":"👮"},{"name":"Post office","icon":"📮"},{"name":"Primary school","icon":"🏫"},{"name":"Real estate agency","icon":"🏠"},{"name":"Restaurant","icon":"🍽️"},{"name":"Roofing contractor","icon":"🏠"},{"name":"RV park","icon":"🚐"},{"name":"School","icon":"🎒"},{"name":"Secondary school","icon":"🏫"},{"name":"Shoe store","icon":"👞"},{"name":"Shopping mall","icon":"🛍️"},{"name":"Spa","icon":"💆"},{"name":"Stadium","icon":"🏟️"},{"name":"Storage","icon":"🗄️"},{"name":"Store","icon":"🛒"},{"name":"Subway station","icon":"🚇"},{"name":"Supermarket","icon":"🛒"},{"name":"Synagogue","icon":"🕍"},{"name":"Taxi stand","icon":"🚕"},{"name":"Train station","icon":"🚉"},{"name":"Transit station","icon":"🚏"},{"name":"Travel agency","icon":"✈️"},{"name":"University","icon":"🎓"},{"name":"Veterinary care","icon":"🐕"},{"name":"Zoo","icon":"🦁"}];
+function openNearbySearch(query,provider="google"){
+  const q=String(query||"").trim(),lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
+  if(!q)return;
+  if(lat==null||lon==null){$("placeSearchStatus").textContent="Waiting for GPS location…";$("placeSearchStatus").classList.add("loading-blink");return}
+  const text=encodeURIComponent(`${q} near ${lat},${lon}`);
+  const url=provider==="mappls"
+    ?`https://mappls.com/${encodeURIComponent(q)}/near/${lat},${lon}`
+    :`https://www.google.com/maps/search/?api=1&query=${text}`;
+  window.open(url,"_blank","noopener");
+}
 function renderPlacesScreen(c){
-  c.innerHTML=`<h2>Nearby Places</h2><div class="search-box"><input id="placeSearchInput" type="search" placeholder="Search places, shops, hospitals…"><button id="placeSearchBtn" type="button">Search</button></div><div class="quick-search"><button data-q="Hospitals">Hospitals</button><button data-q="Fuel stations">Fuel</button><button data-q="Restaurants">Restaurants</button><button data-q="ATMs">ATMs</button><button data-q="Pharmacies">Pharmacies</button><button data-q="Hotels">Hotels</button></div><div id="placeResults">${latestPlaces.length?placeListHTML(latestPlaces):'<p class="loading-blink">Fetching nearby places…</p>'}</div>`;
-  $("placeSearchBtn").onclick=()=>placeExternalSearch();
-  $("placeSearchInput").addEventListener("keydown",e=>{if(e.key==="Enter")placeExternalSearch()});
-  document.querySelectorAll(".quick-search button").forEach(b=>b.onclick=()=>placeExternalSearch(b.dataset.q));
+  const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
+  c.innerHTML=`<div class="places-screen">
+    <div class="map-title"><h2>PLACES</h2><span class="map-current">${lat!=null?"GPS position ready":"Waiting for GPS…"}</span></div>
+    <div class="search-box places-search">
+      <input id="placeSearchInput" type="search" placeholder="Search categories or a custom place…">
+      <button id="placeSearchBtn" type="button">Search</button>
+    </div>
+    <div id="placeSearchStatus" class="map-current" style="margin:0 3px 4px">Choose a category or search for any place.</div>
+    ${latestPlaces.length?`<div class="places-results"><div class="places-results-title">Nearby places from HERE</div>${placeListHTML(latestPlaces)}</div>`:""}
+    <div id="placeCategoryList" class="places-category-list"></div>
+  </div>`;
+  const input=$("placeSearchInput");
+  $("placeSearchBtn").onclick=()=>{
+    const q=input.value.trim();
+    if(q){$("placeSearchStatus").textContent=`Opening search for “${q}”…`;openNearbySearch(q,"google")}
+  };
+  input.addEventListener("keydown",e=>{if(e.key==="Enter")$("placeSearchBtn").click()});
+  renderPlaceCategories("");
+}
+function renderPlaceCategories(filter=""){
+  const box=$("placeCategoryList");if(!box)return;
+  const q=String(filter||"").toLowerCase();
+  const list=PLACE_CATEGORIES.filter(x=>x.name.toLowerCase().includes(q));
+  box.innerHTML=list.length?list.map(x=>`<button class="places-category" type="button" data-q="${escapeHTML(x.name)}"><span class="cat-icon">${x.icon}</span><span class="cat-name">${escapeHTML(x.name)}</span><span class="cat-arrow">›</span></button>`).join(""):'<div class="no-results">No category found. Use Search for a custom place.</div>';
+  box.querySelectorAll(".places-category").forEach(b=>b.addEventListener("click",()=>{
+    $("placeSearchStatus").textContent=`Searching for ${b.dataset.q}…`;
+    $("placeSearchStatus").classList.add("loading-blink");
+    openNearbySearch(b.dataset.q,"google");
+    setTimeout(()=>$("placeSearchStatus")?.classList.remove("loading-blink"),900);
+  }));
+  box.querySelectorAll(".places-category").forEach(b=>b.addEventListener("contextmenu",e=>e.preventDefault()));
+  const input=$("placeSearchInput");
+  if(input&&!input.dataset.boundFilter){input.dataset.boundFilter="1";input.addEventListener("input",()=>renderPlaceCategories(input.value))}
 }
 function placeListHTML(places){
-  return '<div class="place-list large">'+places.slice(0,20).map(x=>`<div class="place-item"><b>${escapeHTML(x.name||"Unnamed place")}</b><small>${escapeHTML(x.category||x.type||"Place")} ${x.distanceM!=null?"• "+Math.round(x.distanceM)+" m":""}</small></div>`).join("")+"</div>"
+  return '<div class="place-list large">'+places.slice(0,20).map(x=>{
+    const name=escapeHTML(x.name||"Unnamed place");
+    const type=escapeHTML(x.category||x.type||"Place");
+    const dist=x.distanceM!=null?" • "+Math.round(x.distanceM)+" m":"";
+    const q=encodeURIComponent(x.name||"");
+    const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
+    const href=lat!=null&&lon!=null?`https://www.google.com/maps/search/?api=1&query=${q}%20near%20${lat},${lon}`:"#";
+    return `<div class="places-result-card"><b>${name}</b><small>${type}${dist}</small><a target="_blank" rel="noopener" href="${href}" style="font-size:11px;color:#0875ed;text-decoration:none">Open on map ›</a></div>`;
+  }).join("")+"</div>"
 }
-function placeExternalSearch(query){
-  const q=String(query||$("placeSearchInput")?.value||"").trim();
-  if(!q)return;
-  const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
-  if(lat==null){$("placeResults").innerHTML='<p class="loading-blink">Waiting for GPS location…</p>';return}
-  $("placeResults").innerHTML=`<p class="loading-blink">Searching for ${escapeHTML(q)}…</p><div class="search-actions"><a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+" near "+lat+","+lon)}">Google Maps search</a><a target="_blank" rel="noopener" href="https://mappls.com/${encodeURIComponent(q)}/near/${lat},${lon}">Mappls nearby search</a></div>`;
-}
-
 $("gpsStatus").addEventListener("click",()=>toggleGPS());
 $("dataStatus").addEventListener("click",()=>toggleData());
 

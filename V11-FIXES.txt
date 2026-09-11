@@ -1,0 +1,11 @@
+GPS Viewer v11
+
+- More robust HERE response parsing for place/address data.
+- Post Office lookup added from the postal PIN when HERE does not return a post-office name.
+- “YOU ARE AT” area is taller and more prominent.
+- App background now fills the full iPhone viewport.
+- Footer text is below the three bottom tabs at the bottom of the app.
+- MAP opens OpenStreetMap directly, with Mappls and Google Maps alternatives.
+- PLACES uses the supplied sample index.html category list (93 categories) plus custom search and nearby HERE results.
+- No automatic venue images are fetched.
+- Service-worker cache is v11.
