@@ -89,11 +89,12 @@
       <button class="active" type="button" data-tab="location">⌂<span>LOCATION</span></button>
       <button type="button" data-tab="map">◫<span>MAP</span></button>
       <button type="button" data-tab="places">●<span>PLACES</span></button>
-      <button type="button" data-tab="weather">☼<span>WEATHER</span></button>
-      <button type="button" data-tab="more">•••<span>MORE</span></button>
     </nav>
 
-    <section id="tabPanel" class="tab-panel card" hidden><div id="tabPanelContent"></div></section>
+    <section id="fullScreenView" class="fullscreen-view" hidden aria-modal="true" role="dialog">
+      <button id="fullScreenBack" class="fullscreen-back" type="button" aria-label="Back">‹ <span>Back</span></button>
+      <div id="fullScreenContent" class="fullscreen-content"></div>
+    </section>
     <footer id="footerNote">Location and weather require data</footer>
   </main>
   <script src="digipin.js"></script>

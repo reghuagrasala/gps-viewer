@@ -1,1 +1,1 @@
-GPS Viewer v8 — runtime bug fixed
+GPS Viewer v9 — connectivity, status colours, full-screen map/places

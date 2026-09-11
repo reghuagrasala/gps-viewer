@@ -1,7 +1,7 @@
 :root{
   --sky:#66cef5;--sky2:#bdeeff;--blue:#0875ed;--deep:#10295f;--ink:#09132b;
   --muted:#405473;--glass:rgba(255,255,255,.88);--border:rgba(255,255,255,.95);
-  --green:#16ad4b;--red:#e93636;--gap:6px;
+  --green:#16ad4b;--yellow:#e0a600;--red:#777b86;--gap:6px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,Arial,sans-serif;color:var(--ink);-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -14,7 +14,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradi
 .titlebar span{font-size:12px;color:#234a78;white-space:nowrap}
 .status-row{height:40px;flex:0 0 40px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .status-card{height:40px;display:flex;align-items:center;padding:0 10px;gap:7px;font-size:17px}
-.status-card.gps{color:#0b9947}.status-card.data{color:#e43832}.status-card .status-icon{font-size:21px;line-height:1}.status-card .status-dot{margin-left:auto;width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 2px rgba(22,173,75,.1)}.status-card.data .status-dot{background:var(--red)}.status-card.off{color:#687083}.status-card.off .status-dot{background:#777}
+.status-card.gps{color:#0b9947}.status-card.data{color:#0b9947}.status-card.weak{color:#c58a00}.status-card .status-icon{font-size:21px;line-height:1}.status-card .status-dot{margin-left:auto;width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 2px rgba(22,173,75,.1)}.status-card.data .status-dot{background:var(--red)}.status-card.off{color:#687083}.status-card.off .status-dot{background:#858a94}.status-card.weak .status-dot{background:var(--yellow);box-shadow:0 0 0 2px rgba(224,166,0,.12)}
 .address-card{height:88px;flex:0 0 88px;padding:8px 11px;display:flex;gap:9px;align-items:center;min-width:0;position:relative}
 .place-icon{flex:0 0 52px;text-align:center;font-size:38px;color:#24518b;line-height:1}
 .address-content{min-width:0;overflow:hidden;padding-right:15px}
@@ -79,3 +79,16 @@ footer{height:13px;flex:0 0 13px;text-align:center;color:#527aa4;font-size:9px;l
 .panel-actions button,.panel-actions a{border:0;border-radius:11px;padding:8px 11px;background:#087df1;color:white;text-decoration:none;font:600 12px inherit}
 .place-list{display:grid;gap:6px}.place-item{padding:8px;background:rgba(255,255,255,.72);border-radius:11px}
 .place-item b{font-size:14px}.place-item small{display:block;color:#4b607c;margin-top:2px}
+
+.fullscreen-view{position:fixed;inset:0;z-index:100;background:linear-gradient(145deg,#e9f9ff,#bfeeff);display:flex;flex-direction:column;overflow:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.fullscreen-view[hidden]{display:none}
+.fullscreen-back{position:absolute;left:12px;top:max(10px,env(safe-area-inset-top));z-index:3;border:0;border-radius:12px;background:rgba(255,255,255,.94);color:#10295f;font:650 16px inherit;padding:7px 11px;box-shadow:0 2px 8px rgba(18,78,130,.16);cursor:pointer}
+.fullscreen-content{width:100%;height:100%;padding:58px 14px 14px;overflow:auto}
+.fullscreen-content h2,.fullscreen-content h3{color:#0862c9;margin:0 0 10px}
+.fullscreen-map{width:100%;height:calc(100dvh - 150px);min-height:300px;border:0;border-radius:16px;background:#d9f2ff;box-shadow:0 3px 12px rgba(18,78,130,.16)}
+.map-actions,.search-actions,.quick-search{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+.map-actions a,.search-actions a,.quick-search button{border:0;border-radius:11px;padding:9px 12px;background:#087df1;color:white;text-decoration:none;font:650 12px inherit;cursor:pointer}
+.search-box{display:flex;gap:7px;margin-bottom:10px}.search-box input{flex:1;min-width:0;border:1px solid #b7cee1;border-radius:11px;padding:10px 11px;font:14px inherit;outline:none;background:white}.search-box button{border:0;border-radius:11px;padding:9px 13px;background:#087df1;color:#fff;font:650 12px inherit}
+.place-list.large{max-height:none}
+.loading-blink{animation:resultBlink 1s ease-in-out infinite}
+@keyframes resultBlink{0%,100%{opacity:1}50%{opacity:.35}}

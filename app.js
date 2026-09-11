@@ -8,17 +8,22 @@ const LOOKUP_COOLDOWN_MS=15000;
 const WEATHER_REFRESH_MS=10*60*1000;
 const API_BASE=(window.GPS_VIEWER_CONFIG&&window.GPS_VIEWER_CONFIG.apiBase)||"https://small-sky-cec5.hrcvb7p7r5.workers.dev";
 
-function setGPSState(kind,text){const el=$("gpsStatus");el.classList.remove("warn","off");if(kind)el.classList.add(kind);el.querySelector("b").textContent=text}
-function setDataState(online){const el=$("dataStatus");el.classList.toggle("off",!online);el.querySelector("b").textContent=online?"DATA ON":"DATA OFF";el.querySelector(".status-dot").style.background=online?"#16ad4b":"#e93636"}
+function setGPSState(kind,text){const el=$("gpsStatus");el.classList.remove("warn","off","weak");if(kind)el.classList.add(kind);el.querySelector("b").textContent=text}
+function setDataState(state){const el=$("dataStatus");el.classList.remove("off","weak");const strong=state==="strong"||state===true;const weak=state==="weak";if(weak)el.classList.add("weak");if(!strong&&!weak)el.classList.add("off");el.querySelector("b").textContent=strong?"DATA ON":weak?"DATA WEAK":"DATA OFF";el.querySelector(".status-dot").style.background=strong?"#16ad4b":weak?"#e0a600":"#858a94"}
 function formatNum(n,d=6){return Number(n).toFixed(d)}
 function kmh(mps){return mps==null||!Number.isFinite(mps)?0:mps*3.6}
 function quality(acc){if(!Number.isFinite(acc))return "—";if(acc<=10)return "STRONG";if(acc<=30)return "GOOD";if(acc<=100)return "WEAK";return "POOR"}
-function updateGPSQuality(acc){const q=quality(acc);setGPSState((q==="WEAK"||q==="POOR")?"warn":"","GPS ON")}
+function updateGPSQuality(acc){const q=quality(acc);setGPSState((q==="WEAK"||q==="POOR")?"weak":"","GPS ON")}
 function localDateTime(){const d=new Date();$("weatherDate").textContent=d.toLocaleDateString("en-IN",{day:"2-digit",month:"2-digit",year:"2-digit"});$("weatherTime").textContent=d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true})}
 function setTimezone(){const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"Asia/Kolkata";$("timezone").textContent=tz==="Asia/Kolkata"?"Kolkata GMT+5:30":tz.replace("Asia/","")}
 function saveLocal(key,data){try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}}
 function loadLocal(key){try{return JSON.parse(localStorage.getItem(key))}catch(e){return null}}
+function blink(id,text){const el=$(id);el.textContent=text;el.classList.add("loading-blink")}
+function stopBlink(id){$(id)?.classList.remove("loading-blink")}
+function apiUrl(path,params){const u=new URL(API_BASE.replace(/\/$/,"")+path);Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,v));u.searchParams.set("_",Date.now().toString());return u.toString()}
+async function fetchJSON(url,timeout=15000){const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),timeout);try{const r=await fetch(url,{cache:"no-store",signal:ctl.signal,headers:{Accept:"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);const type=r.headers.get("content-type")||"";if(!type.includes("json"))throw new Error("Non-JSON response");return await r.json()}finally{clearTimeout(t)}}
 function renderPlace(d,source="LIVE"){
+  stopBlink("addressLine2");stopBlink("addressLine3");
   const p=d?.primaryLocation;
   const a=d?.address||{};
   if(p?.name){$("placeName").textContent=p.name; $("placeIcon").textContent=placeEmoji(p.type); }
@@ -57,21 +62,23 @@ function loadLastAddress(){
   if(d){$("placeName").textContent=p?.primaryLocation?.name||d.label||"Last known location";$("addressLine2").textContent=d.line2||d.street||"";$("addressLine3").textContent=d.line3||"";$("postOffice").textContent=(d.city||d.district||"—")+(d.postalCode?" ("+d.postalCode+")":"")}
 }
 async function reverseGeocode(lat,lon){
-  if(!navigator.onLine)return false;
-  const now=Date.now();if(lastNetworkLookup&&now-lastNetworkLookup<LOOKUP_COOLDOWN_MS)return false;lastNetworkLookup=now;setDataState(true);
+  if(!navigator.onLine){setDataState("weak");return false}
+  const now=Date.now();if(lastNetworkLookup&&now-lastNetworkLookup<LOOKUP_COOLDOWN_MS)return false;lastNetworkLookup=now;
+  blink("addressLine2","Fetching location…");blink("addressLine3","Please wait…");setDataState("weak");
   try{
-    const r=await fetch(`${API_BASE}/api/location?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
-    if(!r.ok)throw new Error("location lookup failed");
-    const j=await r.json();if(j.ok){latestPlaces=Array.isArray(j.places)?j.places:(Array.isArray(j.nearbyPlaces)?j.nearbyPlaces:[]);renderPlace(j,"LIVE");await gvPut("address",lat,lon,j);return true}
+    const j=await fetchJSON(apiUrl("/api/location",{lat,lon}));
+    if(j.ok){latestPlaces=Array.isArray(j.places)?j.places:(Array.isArray(j.nearbyPlaces)?j.nearbyPlaces:[]);renderPlace(j,"LIVE");await gvPut("address",lat,lon,j);setDataState("strong");return true}
+    throw new Error("No location result");
   }catch(e){
     const cached=await gvGetNearby("address",lat,lon,250);
-    if(cached){renderPlace(cached.data,"CACHE");return true}
-    $("addressLine2").textContent="Online place/address lookup unavailable";$("addressLine3").textContent="";
+    if(cached){renderPlace(cached.data,"CACHE");setDataState("weak");return true}
+    $("addressLine2").textContent="Location result not fetched";$("addressLine3").textContent="Check DATA connection";stopBlink("addressLine2");stopBlink("addressLine3");setDataState("weak");
   }
-  return false;
+  return false
 }
 function weatherLabel(code){const map={0:["Clear sky","☀️"],1:["Mainly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Rime fog","🌫️"],51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],61:["Light rain","🌦️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],71:["Light snow","🌨️"],73:["Snow","🌨️"],75:["Heavy snow","❄️"],80:["Rain showers","🌦️"],81:["Rain showers","🌧️"],82:["Heavy showers","⛈️"],95:["Thunderstorm","⛈️"],96:["Thunderstorm + hail","⛈️"],99:["Thunderstorm + hail","⛈️"]};return map[code]||["Unknown","☁️"]}
 function renderWeather(c,j,source="LIVE"){
+  stopBlink("condition");
   const [label,icon]=weatherLabel(c.weather_code);
   $("temperature").textContent=Math.round(c.temperature_2m??0)+"°";
   $("temperaturePosition").textContent=Math.round(c.temperature_2m??0)+" °C";
@@ -87,16 +94,16 @@ function renderWeather(c,j,source="LIVE"){
   $("footerNote").textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather";
 }
 async function fetchWeather(lat,lon,force=false){
-  if(!navigator.onLine){const cached=await gvGetNearby("weather",lat,lon,1000);if(cached)renderWeather(cached.data.current,cached.data,"CACHE");return}
+  if(!navigator.onLine){setDataState("weak");const cached=await gvGetNearby("weather",lat,lon,1000);if(cached)renderWeather(cached.data.current,cached.data,"CACHE");return}
   if(weatherTimer&&!force)return;
   weatherTimer=setTimeout(()=>weatherTimer=null,WEATHER_REFRESH_MS);
+  blink("condition","Fetching weather…");setDataState("weak");
   try{
-    const r=await fetch(`${API_BASE}/api/weather?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
-    if(!r.ok)throw new Error("weather failed");
-    const j=await r.json();renderWeather(j.current||{},j,"LIVE");await gvPut("weather",lat,lon,j);
+    const j=await fetchJSON(apiUrl("/api/weather",{lat,lon}));renderWeather(j.current||{},j,"LIVE");await gvPut("weather",lat,lon,j);setDataState("strong");stopBlink("condition");
   }catch(e){
     const cached=await gvGetNearby("weather",lat,lon,1000);
-    if(cached)renderWeather(cached.data.current,cached.data,"CACHE");else $("condition").textContent="Weather unavailable";
+    if(cached){renderWeather(cached.data.current,cached.data,"CACHE");setDataState("weak")}
+    else{$("condition").textContent="Weather result not fetched";stopBlink("condition");setDataState("weak")}
   }
 }
 function compass(deg){if(!Number.isFinite(deg))return "";return ["N","NE","E","SE","S","SW","W","NW"][Math.round(deg/45)%8]}
@@ -116,7 +123,7 @@ function updatePosition(pos){
   $("movement").textContent=kmh(c.speed)>1.5?"In motion":"Stationary";
   updateGPSQuality(c.accuracy);
   try{$("digipin").textContent=formatDigiPin(getDigiPin(lat,lon))}catch(e){$("digipin").textContent="Outside India"}
-  if(dataEnabled&&navigator.onLine){if(movedEnough(previous,pos)){clearTimeout(addressTimer);addressTimer=setTimeout(()=>reverseGeocode(lat,lon),700);fetchWeather(lat,lon)}}
+  if(dataEnabled&&navigator.onLine){setDataState("weak");if(movedEnough(previous,pos)){clearTimeout(addressTimer);addressTimer=setTimeout(()=>reverseGeocode(lat,lon),700);fetchWeather(lat,lon)}}
   else{ $("footerNote").textContent="Offline: GPS + DIGIPIN + cached results";updateOfflineFallback(lat,lon)}
 }
 function gpsError(err){
@@ -125,7 +132,7 @@ function gpsError(err){
     :err?.code===2
       ?"GPS UNAVAILABLE — check Windows Location Services"
       :"GPS TIMEOUT — waiting for a position";
-  setGPSState("warn",msg);
+  setGPSState(err?.code===1?"off":"weak",msg);
   $("footerNote").textContent=msg;
 }
 function startGPS(){
@@ -142,7 +149,7 @@ function stopGPS(){
 function toggleGPS(){gpsEnabled?stopGPS():startGPS()}
 function toggleData(){
   dataEnabled=!dataEnabled;
-  setDataState(dataEnabled&&navigator.onLine);
+  setDataState(dataEnabled&&navigator.onLine?"weak":"off");
   if(dataEnabled&&lastPosition&&navigator.onLine){
     reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);
     fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true);
@@ -154,30 +161,40 @@ function toggleData(){
 function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function showTab(tab){
   currentTab=tab;
-  const panel=$("tabPanel"), c=$("tabPanelContent");
-  if(tab==="location"){panel.hidden=true;return}
-  panel.hidden=false;
+  if(tab==="location"){closeFullScreen();return}
+  const view=$("fullScreenView"),c=$("fullScreenContent");
+  view.hidden=false;
   if(tab==="map"){
     const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
-    c.innerHTML=lat!=null?`<h3>Map</h3><p>${lat.toFixed(6)}°, ${lon.toFixed(6)}°</p><div class="panel-actions"><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${lat},${lon}">Google Maps</a><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}">OpenStreetMap</a></div>`:"<h3>Map</h3><p>Waiting for GPS location.</p>";
+    if(lat==null){c.innerHTML='<h2>Map</h2><p class="loading-blink">Waiting for GPS location…</p>';return}
+    const bbox=`${lon-0.008},${lat-0.006},${lon+0.008},${lat+0.006}`;
+    c.innerHTML=`<h2>Map</h2><iframe class="fullscreen-map" title="OpenStreetMap" src="https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${lat}%2C${lon}"></iframe><div class="map-actions"><a target="_blank" rel="noopener" href="https://mappls.com/@${lat.toFixed(6)},${lon.toFixed(6)}">Mappls</a><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${lat},${lon}">Google Maps</a><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}">OpenStreetMap</a></div>`;
   }else if(tab==="places"){
-    const places=latestPlaces||[];
-    c.innerHTML="<h3>Nearby Places</h3>"+(places.length?'<div class="place-list">'+places.slice(0,10).map(x=>`<div class="place-item"><b>${escapeHTML(x.name||"Unnamed place")}</b><small>${escapeHTML(x.category||x.type||"Place")} ${x.distanceM!=null?"• "+Math.round(x.distanceM)+" m":""}</small></div>`).join("")+"</div>":"<p>No nearby places yet. Keep DATA ON for an online place lookup.</p>");
-  }else if(tab==="weather"){
-    c.innerHTML=`<h3>Weather</h3><div class="panel-grid"><div class="panel-item">Temperature<b>${$("temperature").textContent}</b></div><div class="panel-item">Feels like<b>${$("feels").textContent}</b></div><div class="panel-item">Humidity<b>${$("humidity").textContent}</b></div><div class="panel-item">Wind<b>${$("wind").textContent}</b></div><div class="panel-item">Clouds<b>${$("clouds").textContent}</b></div><div class="panel-item">UV Index<b>${$("uv").textContent}</b></div></div>`;
-  }else{
-    c.innerHTML=`<h3>More</h3><p>GPS: <b>${gpsEnabled?"ON":"OFF"}</b> &nbsp; Data: <b>${dataEnabled?"ON":"OFF"}</b></p><p>Offline: GPS coordinates, DIGIPIN and cached results.</p><div class="panel-actions"><button id="moreGPS">${gpsEnabled?"Turn GPS OFF":"Turn GPS ON"}</button><button id="moreData">${dataEnabled?"Turn DATA OFF":"Turn DATA ON"}</button></div>`;
-    $("moreGPS").onclick=()=>{toggleGPS();showTab("more")};
-    $("moreData").onclick=()=>{toggleData();showTab("more")};
+    renderPlacesScreen(c);
   }
 }
-$("gpsStatus").addEventListener("click",toggleGPS);
-$("dataStatus").addEventListener("click",toggleData);
-document.querySelectorAll(".tabs button").forEach(btn=>btn.addEventListener("click",()=>{
-  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  showTab(btn.dataset.tab);
-}));
+function closeFullScreen(){
+  $("fullScreenView").hidden=true;
+  currentTab="location";
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab==="location"));
+}
+function renderPlacesScreen(c){
+  c.innerHTML=`<h2>Nearby Places</h2><div class="search-box"><input id="placeSearchInput" type="search" placeholder="Search places, shops, hospitals…"><button id="placeSearchBtn" type="button">Search</button></div><div class="quick-search"><button data-q="Hospitals">Hospitals</button><button data-q="Fuel stations">Fuel</button><button data-q="Restaurants">Restaurants</button><button data-q="ATMs">ATMs</button><button data-q="Pharmacies">Pharmacies</button><button data-q="Hotels">Hotels</button></div><div id="placeResults">${latestPlaces.length?placeListHTML(latestPlaces):'<p class="loading-blink">Fetching nearby places…</p>'}</div>`;
+  $("placeSearchBtn").onclick=()=>placeExternalSearch();
+  $("placeSearchInput").addEventListener("keydown",e=>{if(e.key==="Enter")placeExternalSearch()});
+  document.querySelectorAll(".quick-search button").forEach(b=>b.onclick=()=>placeExternalSearch(b.dataset.q));
+}
+function placeListHTML(places){
+  return '<div class="place-list large">'+places.slice(0,20).map(x=>`<div class="place-item"><b>${escapeHTML(x.name||"Unnamed place")}</b><small>${escapeHTML(x.category||x.type||"Place")} ${x.distanceM!=null?"• "+Math.round(x.distanceM)+" m":""}</small></div>`).join("")+"</div>"
+}
+function placeExternalSearch(query){
+  const q=String(query||$("placeSearchInput")?.value||"").trim();
+  if(!q)return;
+  const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
+  if(lat==null){$("placeResults").innerHTML='<p class="loading-blink">Waiting for GPS location…</p>';return}
+  $("placeResults").innerHTML=`<p class="loading-blink">Searching for ${escapeHTML(q)}…</p><div class="search-actions"><a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+" near "+lat+","+lon)}">Google Maps search</a><a target="_blank" rel="noopener" href="https://mappls.com/${encodeURIComponent(q)}/near/${lat},${lon}">Mappls nearby search</a></div>`;
+}
+
 $("copyDigipin").addEventListener("click",async e=>{
   e.stopPropagation();
   const v=$("digipin").textContent;
@@ -188,16 +205,16 @@ $("copyDigipin").addEventListener("click",async e=>{
   }catch(e){}
 });
 window.addEventListener("online",()=>{
-  setDataState(dataEnabled);
+  setDataState(dataEnabled&&navigator.onLine?"weak":"off");
   if(lastPosition){
     reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);
     fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true);
   }
 });
 window.addEventListener("offline",()=>{
-  setDataState(false);
+  setDataState("off");
   $("footerNote").textContent="Offline: GPS + DIGIPIN + cached results";
 });
-setTimezone();localDateTime();loadLastAddress();setDataState(dataEnabled&&navigator.onLine);startGPS();
+setTimezone();localDateTime();loadLastAddress();setDataState(dataEnabled&&navigator.onLine?"weak":"off");startGPS();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 setInterval(localDateTime,1000);
