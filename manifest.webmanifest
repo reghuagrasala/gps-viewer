@@ -1,10 +1,11 @@
 {
   "name":"GPS Viewer",
   "short_name":"GPS Viewer",
-  "id":"./",
-  "start_url":"./",
+  "id":"./index.html",
+  "start_url":"./index.html?app=v17",
   "scope":"./",
   "display":"standalone",
+  "display_override":["standalone","minimal-ui","browser"],
   "orientation":"portrait",
   "background_color":"#66cef5",
   "theme_color":"#66cef5",
