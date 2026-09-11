@@ -5,7 +5,7 @@
   const localSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
   function getGPS(done){
     if(!navigator.geolocation){done(null);return}
-    navigator.geolocation.getCurrentPosition(p=>done(p.coords),()=>done(null),{enableHighAccuracy:true,maximumAge:5000,timeout:10000});
+    navigator.geolocation.getCurrentPosition(p=>done(p.coords),()=>done(null),{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
   }
   async function ensurePostOffice(){
     const el=$("postOffice");
@@ -29,43 +29,60 @@
   }
   setInterval(ensurePostOffice,1500);ensurePostOffice();
 
-  /* Google Maps only. Build the search around the CURRENT GPS coordinates and
-     current address context, rather than a generic category search. */
-  function googleMapsSearchUrl(query,coords){
+  /* On iPhone, Google Maps' native URL supports an explicit search viewport:
+     q = what to find, center = the CURRENT GPS position. This is more precise
+     than putting coordinates into the text query, which can make Google treat
+     the coordinates as part of the place name search. */
+  function googleMapsAppUrl(query,coords){
     const q=String(query||"").trim();
     const lat=Number(coords?.latitude),lon=Number(coords?.longitude);
     if(!q||!Number.isFinite(lat)||!Number.isFinite(lon))return "";
-    const placeName=String($("placeName")?.textContent||"").trim();
-    const line2=String($("addressLine2")?.textContent||"").trim();
-    const line3=String($("addressLine3")?.textContent||"").trim();
-    const context=[placeName,line2,line3].filter(Boolean).join(", ");
-    const text=context?`${q} near ${context} (${lat.toFixed(6)}, ${lon.toFixed(6)})`:`${q} near ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    return `comgooglemaps://?q=${encodeURIComponent(q)}&center=${lat},${lon}&zoom=16`;
+  }
+  window.googleMapsAppUrl=googleMapsAppUrl;
+
+  function googleMapsWebFallback(query,coords){
+    const q=String(query||"").trim();
+    const lat=Number(coords?.latitude),lon=Number(coords?.longitude);
+    const place=String($("placeName")?.textContent||"").trim();
+    const address=String($("addressLine3")?.textContent||"").trim();
+    const context=[place,address].filter(Boolean).join(", ");
+    const text=context?`${q} near ${context}`:`${q} near ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text)}`;
   }
-  window.googleMapsSearchUrl=googleMapsSearchUrl;
 
-  window.openNearbySearch=function(query){
+  function openGoogleMapsSearch(query){
     const q=String(query||"").trim();if(!q)return;
     const status=$("placeSearchStatus");
     getGPS(coords=>{
       if(!coords){if(status)status.textContent="Waiting for GPS location…";return}
-      const url=googleMapsSearchUrl(q,coords);
-      if(!url)return;
-      if(status)status.textContent=`Opening Google Maps for ${q} near your current location…`;
-      window.location.assign(url);
+      const nativeUrl=googleMapsAppUrl(q,coords);
+      const fallback=googleMapsWebFallback(q,coords);
+      if(status)status.textContent=`Opening Google Maps near your current location…`;
+      let returned=false;
+      const onHide=()=>{returned=true;document.removeEventListener("visibilitychange",onHide)};
+      document.addEventListener("visibilitychange",onHide);
+      window.location.href=nativeUrl;
+      setTimeout(()=>{
+        document.removeEventListener("visibilitychange",onHide);
+        if(!returned)window.location.assign(fallback);
+      },1200);
     });
-  };
+  }
 
-  /* HERE result cards: Google Maps only, with current address context. */
+  window.openNearbySearch=openGoogleMapsSearch;
+  window.openGooglePlace=openGoogleMapsSearch;
+
+  /* HERE result cards: every Google Maps action uses fresh current GPS as the
+     map center, so tapping a result cannot silently use an old/random area. */
   window.placeListHTML=function(places){
     const arr=Array.isArray(places)?places:[];
     return '<div class="place-list large">'+arr.slice(0,20).map(x=>{
       const name=String(x?.name||"Unnamed place").replace(/[&<>\"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#039;"}[m]));
+      const jsName=String(x?.name||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");
       const type=String(x?.category||x?.type||"Place");
       const dist=x?.distanceM!=null?" • "+Math.round(x.distanceM)+" m":"";
-      const q=encodeURIComponent(x?.name||"");
-      const context=encodeURIComponent(`${x?.name||""} near ${$("placeName")?.textContent||""} ${$("addressLine3")?.textContent||""}`);
-      return `<div class="places-result-card"><b>${name}</b><small>${type}${dist}</small><a href="https://www.google.com/maps/search/?api=1&query=${context}" style="font-size:11px;color:#0875ed;text-decoration:none">Open in Google Maps ›</a></div>`;
+      return `<div class="places-result-card"><b>${name}</b><small>${type}${dist}</small><a href="#" onclick="event.preventDefault();openGooglePlace('${jsName}')" style="font-size:11px;color:#0875ed;text-decoration:none">Open in Google Maps ›</a></div>`;
     }).join("")+"</div>";
   };
 
