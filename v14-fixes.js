@@ -29,20 +29,34 @@
   }
   setInterval(ensurePostOffice,1500);ensurePostOffice();
 
-  /* Current-tab navigation: Safari Back now returns to the Places screen. */
-  window.openNearbySearch=function(query,provider="google"){
+  /* Google Maps only. Build the search around the CURRENT GPS coordinates and
+     current address context, rather than a generic category search. */
+  function googleMapsSearchUrl(query,coords){
+    const q=String(query||"").trim();
+    const lat=Number(coords?.latitude),lon=Number(coords?.longitude);
+    if(!q||!Number.isFinite(lat)||!Number.isFinite(lon))return "";
+    const placeName=String($("placeName")?.textContent||"").trim();
+    const line2=String($("addressLine2")?.textContent||"").trim();
+    const line3=String($("addressLine3")?.textContent||"").trim();
+    const context=[placeName,line2,line3].filter(Boolean).join(", ");
+    const text=context?`${q} near ${context} (${lat.toFixed(6)}, ${lon.toFixed(6)})`:`${q} near ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text)}`;
+  }
+  window.googleMapsSearchUrl=googleMapsSearchUrl;
+
+  window.openNearbySearch=function(query){
     const q=String(query||"").trim();if(!q)return;
     const status=$("placeSearchStatus");
     getGPS(coords=>{
       if(!coords){if(status)status.textContent="Waiting for GPS location…";return}
-      const text=encodeURIComponent(`${q} near ${coords.latitude},${coords.longitude}`);
-      const url=provider==="mappls"
-        ?`https://mappls.com/${encodeURIComponent(q)}/near/${coords.latitude},${coords.longitude}`
-        :`https://www.google.com/maps/search/?api=1&query=${text}`;
+      const url=googleMapsSearchUrl(q,coords);
+      if(!url)return;
+      if(status)status.textContent=`Opening Google Maps for ${q} near your current location…`;
       window.location.assign(url);
     });
   };
 
+  /* HERE result cards: Google Maps only, with current address context. */
   window.placeListHTML=function(places){
     const arr=Array.isArray(places)?places:[];
     return '<div class="place-list large">'+arr.slice(0,20).map(x=>{
@@ -50,7 +64,8 @@
       const type=String(x?.category||x?.type||"Place");
       const dist=x?.distanceM!=null?" • "+Math.round(x.distanceM)+" m":"";
       const q=encodeURIComponent(x?.name||"");
-      return `<div class="places-result-card"><b>${name}</b><small>${type}${dist}</small><a href="https://www.google.com/maps/search/?api=1&query=${q}" style="font-size:11px;color:#0875ed;text-decoration:none">Open on map ›</a></div>`;
+      const context=encodeURIComponent(`${x?.name||""} near ${$("placeName")?.textContent||""} ${$("addressLine3")?.textContent||""}`);
+      return `<div class="places-result-card"><b>${name}</b><small>${type}${dist}</small><a href="https://www.google.com/maps/search/?api=1&query=${context}" style="font-size:11px;color:#0875ed;text-decoration:none">Open in Google Maps ›</a></div>`;
     }).join("")+"</div>";
   };
 
