@@ -1,0 +1,16 @@
+GPS Viewer v12 fixes
+
+1. Location service now uses the verified Cloudflare Worker:
+   https://my-location-here.hrcvb7p7r5.workers.dev
+
+2. /api/reverse is the primary location endpoint because the verified Worker exposes
+   /api/reverse. Existing fallback logic is retained where applicable.
+
+3. HERE API key is NOT placed in the GitHub Pages files. It remains server-side
+   in the Cloudflare Worker secret.
+
+4. Bottom LOCATION / MAP / PLACES tab bar has increased vertical space and is
+   positioned lower to reduce the unused-looking area at the bottom of iPhone
+   screens. Footer remains below the tabs.
+
+5. Existing blinking location/data fetch status is preserved.

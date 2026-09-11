@@ -1,1 +1,1 @@
-GPS Viewer v11 — address/post office, iPhone bottom layout, expanded Places
+GPS Viewer v12 — verified my-location-here Worker, reverse endpoint primary, bottom tab spacing
