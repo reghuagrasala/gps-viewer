@@ -18,3 +18,13 @@ Do not commit API keys, personal addresses, home coordinates, GPS history, or ot
 GPS and DIGIPIN work offline; cached results may be displayed offline.
 No automatic venue-image fetching is used.
 The compact address card is designed to accommodate 2–3 address lines.
+
+
+## v8 runtime fixes
+- Declares all GPS/data/tab runtime state before startup.
+- Requests one immediate browser location and then keeps watching position.
+- Shows a useful GPS permission/location-service error instead of remaining silently on “Waiting”.
+- GPS coordinates, elevation (when supplied), accuracy, speed, heading and DIGIPIN work without internet once browser location permission is available.
+- DATA ON/OFF now actually changes state.
+- Nearby-place results are retained for the PLACES tab.
+- Service-worker cache is v8 so corrected JavaScript replaces the broken cached version.

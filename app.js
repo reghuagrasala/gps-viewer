@@ -1,5 +1,6 @@
 const $=id=>document.getElementById(id);
 let lastPosition=null, weatherTimer=null, addressTimer=null, lastNetworkLookup=null;
+let gpsWatchId=null, gpsEnabled=true, dataEnabled=true, currentTab="location", latestPlaces=[];
 const lastAddressKey="gpsViewer.lastAddress";
 const lastPlaceKey="gpsViewer.lastPlace";
 const MIN_MOVE_FOR_LOOKUP_M=60;
@@ -61,7 +62,7 @@ async function reverseGeocode(lat,lon){
   try{
     const r=await fetch(`${API_BASE}/api/location?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
     if(!r.ok)throw new Error("location lookup failed");
-    const j=await r.json();if(j.ok){renderPlace(j,"LIVE");await gvPut("address",lat,lon,j);return true}
+    const j=await r.json();if(j.ok){latestPlaces=Array.isArray(j.places)?j.places:(Array.isArray(j.nearbyPlaces)?j.nearbyPlaces:[]);renderPlace(j,"LIVE");await gvPut("address",lat,lon,j);return true}
   }catch(e){
     const cached=await gvGetNearby("address",lat,lon,250);
     if(cached){renderPlace(cached.data,"CACHE");return true}
@@ -118,13 +119,21 @@ function updatePosition(pos){
   if(dataEnabled&&navigator.onLine){if(movedEnough(previous,pos)){clearTimeout(addressTimer);addressTimer=setTimeout(()=>reverseGeocode(lat,lon),700);fetchWeather(lat,lon)}}
   else{ $("footerNote").textContent="Offline: GPS + DIGIPIN + cached results";updateOfflineFallback(lat,lon)}
 }
+function gpsError(err){
+  const msg=err?.code===1
+    ?"GPS DENIED — allow Location for this site"
+    :err?.code===2
+      ?"GPS UNAVAILABLE — check Windows Location Services"
+      :"GPS TIMEOUT — waiting for a position";
+  setGPSState("warn",msg);
+  $("footerNote").textContent=msg;
+}
 function startGPS(){
-  if(!("geolocation" in navigator)){gpsEnabled=false;setGPSState("off","GPS UNAVAILABLE");return}
+  if(!("geolocation" in navigator)){gpsEnabled=false;setGPSState("off","GPS UNAVAILABLE");$("footerNote").textContent="This browser does not provide GPS/location access";return}
   if(gpsWatchId!==null)navigator.geolocation.clearWatch(gpsWatchId);
   gpsEnabled=true;setGPSState("","GPS ON");
-  gpsWatchId=navigator.geolocation.watchPosition(updatePosition,err=>{
-    setGPSState("warn",err.code===1?"GPS DENIED":err.code===2?"GPS UNAVAILABLE":"GPS TIMEOUT");
-  },{enableHighAccuracy:true,maximumAge:2000,timeout:15000});
+  navigator.geolocation.getCurrentPosition(updatePosition,gpsError,{enableHighAccuracy:true,maximumAge:0,timeout:15000});
+  gpsWatchId=navigator.geolocation.watchPosition(updatePosition,gpsError,{enableHighAccuracy:true,maximumAge:2000,timeout:20000});
 }
 function stopGPS(){
   if(gpsWatchId!==null){navigator.geolocation.clearWatch(gpsWatchId);gpsWatchId=null}
@@ -132,11 +141,15 @@ function stopGPS(){
 }
 function toggleGPS(){gpsEnabled?stopGPS():startGPS()}
 function toggleData(){
-  setDataState(!dataEnabled);
-  if(dataEnabled&&lastPosition){
+  dataEnabled=!dataEnabled;
+  setDataState(dataEnabled&&navigator.onLine);
+  if(dataEnabled&&lastPosition&&navigator.onLine){
     reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);
     fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true);
+  } else if(!dataEnabled){
+    $("footerNote").textContent="DATA OFF: GPS, DIGIPIN and cached results still work";
   }
+  if(currentTab==="more") showTab("more");
 }
 function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function showTab(tab){
@@ -175,7 +188,7 @@ $("copyDigipin").addEventListener("click",async e=>{
   }catch(e){}
 });
 window.addEventListener("online",()=>{
-  setDataState(true);
+  setDataState(dataEnabled);
   if(lastPosition){
     reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);
     fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true);
@@ -185,6 +198,6 @@ window.addEventListener("offline",()=>{
   setDataState(false);
   $("footerNote").textContent="Offline: GPS + DIGIPIN + cached results";
 });
-setTimezone();localDateTime();loadLastAddress();setDataState(navigator.onLine);startGPS();
+setTimezone();localDateTime();loadLastAddress();setDataState(dataEnabled&&navigator.onLine);startGPS();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 setInterval(localDateTime,1000);

@@ -29,3 +29,10 @@ GPS → PIN/postal database layer (future pan-India enhancement)
 ## GitHub Pages
 
 Upload the folder contents to a GitHub repository and enable GitHub Pages from the `main` branch. Open the HTTPS URL in Safari and use **Share → Add to Home Screen**.
+
+
+## IMPORTANT — first test after replacing the files
+Open the GitHub Pages URL and press Ctrl+F5. If the app reports
+“GPS DENIED”, allow Location for `reghuagrasala.github.io` in Edge.
+GPS/DIGIPIN themselves do not require internet; browser/Windows location
+permission is still required to obtain the device position.

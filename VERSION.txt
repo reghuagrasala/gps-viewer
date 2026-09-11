@@ -1,6 +1,1 @@
-GPS Viewer GitHub Pages Ready v7 — Bug Fixed
-GPS ON/OFF works
-DATA ON/OFF works
-MAP / PLACES / WEATHER / MORE tabs work
-Offline elevation uses last known cached value when device supplies none
-No automatic venue image fetching
+GPS Viewer v8 — runtime bug fixed
