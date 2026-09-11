@@ -161,14 +161,14 @@ async function reverseGeocode(lat,lon){
   const now=Date.now();if(lastNetworkLookup&&now-lastNetworkLookup<LOOKUP_COOLDOWN_MS)return false;lastNetworkLookup=now;
   blink("addressLine2","Fetching location…");blink("addressLine3","Please wait…");setDataState("weak");
   try{
-    let j=null;
-    try{j=await fetchJSON(apiUrl("/api/location",{lat,lon}),12000)}catch(e){}
-    if(!j?.ok){try{j=await fetchJSON(apiUrl("/api/reverse",{lat,lon}),12000)}catch(e){}}
-    if(j?.ok){
+    // The verified my-location-here Worker exposes /api/reverse and returns
+    // the location object directly (not an {ok:true,...} wrapper).
+    const j=await fetchJSON(apiUrl("/api/reverse",{lat,lon}),12000);
+    if(j && !j.error && (j.countryCode || j.road || j.postalCode || j.label || j.place || j.currentPlace)){
       latestPlaces=Array.isArray(j.places)?j.places:(Array.isArray(j.nearbyPlaces)?j.nearbyPlaces:[]);
       renderPlace(j,"LIVE");await gvPut("address",lat,lon,j);setDataState("strong");return true
     }
-    throw new Error("Location service unavailable");
+    throw new Error(j?.error || "Location service unavailable");
   }catch(e){
     const cached=await gvGetNearby("address",lat,lon,250);
     if(cached){renderPlace(cached.data,"CACHE");setDataState("weak");return true}

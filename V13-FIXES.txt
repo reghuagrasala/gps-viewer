@@ -1,0 +1,22 @@
+GPS Viewer v13 fixes
+
+LOCATION:
+- Uses the verified my-location-here.hrcvb7p7r5.workers.dev Worker.
+- Uses /api/reverse directly.
+- Corrected a response-contract bug: the Worker returns the location object directly,
+  while the previous frontend expected an {ok:true,...} wrapper.
+- This was why GPS coordinates/weather could work while the location card remained
+  "Location result not fetched".
+- The Worker must be deployed with the accompanying CORS-fixed Worker ZIP so GitHub
+  Pages can read the cross-origin JSON response.
+- Post Office is obtained from the Worker response; the Worker performs the PIN lookup
+  server-side, avoiding browser CORS dependence on the postal API.
+
+BOTTOM LAYOUT:
+- LOCATION / MAP / PLACES tab bar is fixed to the visible iPhone viewport.
+- Tab bar enlarged to 60px with a larger touch area.
+- Footer is fixed below the tab bar and respects the iPhone safe-area.
+- Existing information cards and blinking fetch status are preserved.
+
+CACHE:
+- Service-worker cache bumped to v13.

@@ -42,12 +42,12 @@ h2{height:16px;flex:0 0 16px;color:#0862c9;font-size:16px;line-height:16px;margi
 .thermo{font-size:22px;color:#263b65}.temp-row strong{font-size:39px;line-height:.82;letter-spacing:-1.5px}.condition{font-size:12px;font-weight:600;margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .weather-icon{font-size:42px;margin-right:5px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.08))}
 .weather-grid .metric strong{font-size:15px}
-.tabs{height:54px;flex:0 0 54px;margin-top:auto;margin-bottom:0;background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.95);border-radius:17px;display:grid;grid-template-columns:repeat(3,1fr);box-shadow:0 3px 9px rgba(18,78,130,.10)}
+.tabs{height:60px;flex:0 0 60px;margin-top:0;margin-bottom:0;background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.95);border-radius:17px;display:grid;grid-template-columns:repeat(3,1fr);box-shadow:0 3px 9px rgba(18,78,130,.10)}
 .tabs button{border:0;background:transparent;color:#0d3e78;font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:3px 0;min-width:0}
 .tabs button:first-child{font-size:23px}.tabs button:not(:first-child){font-size:20px}
 .tabs button span{font-size:9px;font-weight:650;letter-spacing:.1px}
 .tabs button.active{background:#087df1;color:white;border-radius:14px;margin:3px}
-footer{position:static;left:auto;right:auto;bottom:auto;height:14px;flex:0 0 14px;margin:0 2px;text-align:center;color:#527aa4;font-size:9px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+footer{position:fixed;left:20px;right:20px;bottom:max(3px,env(safe-area-inset-bottom));height:15px;flex:0 0 15px;margin:0;text-align:center;color:#527aa4;font-size:9px;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:370px){
   .app{padding-left:10px;padding-right:10px}.titlebar h1{font-size:27px}.titlebar span{font-size:10px}
   .status-card{font-size:15px}.address-card{height:84px;flex-basis:84px}.place-icon{flex-basis:43px;font-size:32px}
@@ -113,3 +113,34 @@ footer{position:static;left:auto;right:auto;bottom:auto;height:14px;flex:0 0 14p
 .map-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .map-title h2{margin:0}
 .map-current{font-size:11px;color:#496684}
+
+/* GPS Viewer v13: deterministic iPhone bottom layout */
+.tabs{
+  position:fixed;
+  left:20px;
+  right:20px;
+  bottom:calc(env(safe-area-inset-bottom) + 22px);
+  height:60px;
+  flex:0 0 60px;
+  margin:0;
+  z-index:50;
+}
+.tabs button{min-height:58px}
+footer{
+  position:fixed;
+  left:20px;
+  right:20px;
+  bottom:max(3px,env(safe-area-inset-bottom));
+  height:15px;
+  flex:0 0 15px;
+  margin:0;
+  z-index:51;
+}
+@media(max-width:370px){
+  .tabs{
+    left:10px;right:10px;
+    bottom:calc(env(safe-area-inset-bottom) + 20px);
+    height:58px;flex-basis:58px;
+  }
+  footer{left:10px;right:10px}
+}

@@ -1,1 +1,1 @@
-GPS Viewer v12 — verified my-location-here Worker, reverse endpoint primary, bottom tab spacing
+GPS Viewer v13 — Worker CORS/response fix, verified reverse endpoint, iPhone bottom layout fix
