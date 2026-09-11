@@ -17,10 +17,7 @@
 <body>
   <main class="app">
     <header class="titlebar card"><h1>GPS Viewer</h1><span>GPS Works offline</span></header>
-    <section class="status-row">
-      <button class="status-card gps card" id="gpsStatus" type="button" aria-label="Toggle GPS"><span class="status-icon">📍</span><b>GPS ON</b><i class="status-dot"></i></button>
-      <button class="status-card data card" id="dataStatus" type="button" aria-label="Toggle mobile data"><span class="status-icon">▤</span><b>DATA OFF</b><i class="status-dot"></i></button>
-    </section>
+    <section class="status-row"><button class="status-card gps card" id="gpsStatus" type="button" aria-label="Toggle GPS"><span class="status-icon">📍</span><b>GPS ON</b><i class="status-dot"></i></button><button class="status-card data card" id="dataStatus" type="button" aria-label="Toggle mobile data"><span class="status-icon">▤</span><b>DATA OFF</b><i class="status-dot"></i></button></section>
     <section class="address-card card"><div class="place-icon" id="placeIcon">⌖</div><div class="address-content"><div class="label">YOU ARE AT:</div><div class="place-name" id="placeName">Waiting for GPS location…</div><div class="address-line" id="addressLine2"></div><div class="address-line" id="addressLine3"></div></div><div class="address-arrow">›</div></section>
     <section class="two-col compact-row"><div class="card metric"><div class="metric-label">◉ &nbsp; LATITUDE</div><strong id="lat">—</strong></div><div class="card metric"><div class="metric-label">◉ &nbsp; LONGITUDE</div><strong id="lon">—</strong></div></section>
     <section class="two-col compact-row"><div class="card metric"><div class="metric-label">▲ &nbsp; ELEVATION</div><strong id="elevation">—</strong></div><div class="card metric"><div class="metric-label">◷ &nbsp; TIME ZONE</div><strong id="timezone">Kolkata GMT+5:30</strong></div></section>
@@ -34,6 +31,6 @@
     <section id="fullScreenView" class="fullscreen-view" hidden aria-modal="true" role="dialog"><button id="fullScreenBack" class="fullscreen-back" type="button" aria-label="Back">‹ <span>Back</span></button><div id="fullScreenContent" class="fullscreen-content"></div></section>
     <footer id="footerNote">Location and weather require data</footer>
   </main>
-  <script src="digipin.js"></script><script src="offline-cache.js"></script><script src="config.js"></script><script src="app.js"></script><script src="v14-fixes.js"></script><script src="v15-fixes.js"></script>
+  <script src="digipin.js"></script><script src="offline-cache.js"></script><script src="config.js"></script><script src="app.js"></script><script src="v15-fixes.js"></script>
 </body>
 </html>
