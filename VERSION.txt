@@ -1,1 +1,1 @@
-GPS Viewer v9 — connectivity, status colours, full-screen map/places
+GPS Viewer v10 — working controls, real data state, network fallbacks, bottom-tab layout

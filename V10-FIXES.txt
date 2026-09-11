@@ -1,0 +1,17 @@
+GPS Viewer v10
+
+Fixes:
+- GPS and DATA status cards are real clickable controls.
+- GPS can be turned OFF and ON.
+- DATA ON is green; DATA WEAK is yellow only while fetching or after a failed live result; DATA OFF is grey.
+- Bottom navigation has exactly LOCATION / MAP / PLACES.
+- Bottom tabs are pushed to the bottom of the iPhone viewport and aligned left / centre / right.
+- MAP and PLACES open full-screen and have a top-left Back button.
+- Location uses /api/location first and /api/reverse as compatibility fallback.
+- Weather uses the Worker first and Open-Meteo direct fallback.
+- Service worker is v10 and never intercepts cross-origin API requests.
+
+After replacing GitHub Pages files:
+1. Commit/publish the files.
+2. Open the site and press Ctrl+F5.
+3. If an old service worker remains, close the tab and reopen the GitHub Pages URL.
