@@ -3,10 +3,12 @@
   const $=id=>document.getElementById(id);
   const localGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
   const localSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
   function getGPS(done){
     if(!navigator.geolocation){done(null);return}
     navigator.geolocation.getCurrentPosition(p=>done(p.coords),()=>done(null),{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
   }
+
   async function ensurePostOffice(){
     const el=$("postOffice");
     if(!el)return;
@@ -29,62 +31,92 @@
   }
   setInterval(ensurePostOffice,1500);ensurePostOffice();
 
-  /* On iPhone, Google Maps' native URL supports an explicit search viewport:
-     q = what to find, center = the CURRENT GPS position. This is more precise
-     than putting coordinates into the text query, which can make Google treat
-     the coordinates as part of the place name search. */
-  function googleMapsAppUrl(query,coords){
-    const q=String(query||"").trim();
-    const lat=Number(coords?.latitude),lon=Number(coords?.longitude);
-    if(!q||!Number.isFinite(lat)||!Number.isFinite(lon))return "";
-    return `comgooglemaps://?q=${encodeURIComponent(q)}&center=${lat},${lon}&zoom=16`;
-  }
-  window.googleMapsAppUrl=googleMapsAppUrl;
-
-  function googleMapsWebFallback(query,coords){
-    const q=String(query||"").trim();
-    const lat=Number(coords?.latitude),lon=Number(coords?.longitude);
-    const place=String($("placeName")?.textContent||"").trim();
-    const address=String($("addressLine3")?.textContent||"").trim();
-    const context=[place,address].filter(Boolean).join(", ");
-    const text=context?`${q} near ${context}`:`${q} near ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text)}`;
-  }
-
-  function openGoogleMapsSearch(query){
-    const q=String(query||"").trim();if(!q)return;
-    const status=$("placeSearchStatus");
+  /* IMPORTANT: Google Maps place searching must be LOCATION-FIRST.
+     Do NOT put the road/place name into the search query. Long local road
+     names can cause Google to start the search at the far end of that road.
+     On iPhone, use Google's documented app URL scheme with q + center so the
+     search term is separate from the exact current GPS search center. */
+  function currentCoords(done){
     getGPS(coords=>{
-      if(!coords){if(status)status.textContent="Waiting for GPS location…";return}
-      const nativeUrl=googleMapsAppUrl(q,coords);
-      const fallback=googleMapsWebFallback(q,coords);
-      if(status)status.textContent=`Opening Google Maps near your current location…`;
-      let returned=false;
-      const onHide=()=>{returned=true;document.removeEventListener("visibilitychange",onHide)};
-      document.addEventListener("visibilitychange",onHide);
-      window.location.href=nativeUrl;
-      setTimeout(()=>{
-        document.removeEventListener("visibilitychange",onHide);
-        if(!returned)window.location.assign(fallback);
-      },1200);
+      if(coords){
+        // Prefer the live GPS reading over the displayed reverse-geocoded name.
+        done({lat:Number(coords.latitude),lon:Number(coords.longitude)});
+        return;
+      }
+      const lat=Number(window.__gpsViewerLastLat),lon=Number(window.__gpsViewerLastLon);
+      done(Number.isFinite(lat)&&Number.isFinite(lon)?{lat,lon}:null);
     });
   }
 
-  window.openNearbySearch=openGoogleMapsSearch;
-  window.openGooglePlace=openGoogleMapsSearch;
+  function googleMapsAppUrl(query,coords){
+    const q=String(query||"").trim();
+    if(!q||!coords||!Number.isFinite(coords.lat)||!Number.isFinite(coords.lon))return "";
+    return `comgooglemaps://?q=${encodeURIComponent(q)}&center=${coords.lat.toFixed(6)},${coords.lon.toFixed(6)}&zoom=16`;
+  }
 
-  /* HERE result cards: every Google Maps action uses fresh current GPS as the
-     map center, so tapping a result cannot silently use an old/random area. */
-  window.placeListHTML=function(places){
-    const arr=Array.isArray(places)?places:[];
-    return '<div class="place-list large">'+arr.slice(0,20).map(x=>{
-      const name=String(x?.name||"Unnamed place").replace(/[&<>\"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#039;"}[m]));
-      const jsName=String(x?.name||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");
-      const type=String(x?.category||x?.type||"Place");
-      const dist=x?.distanceM!=null?" • "+Math.round(x.distanceM)+" m":"";
-      return `<div class="places-result-card"><b>${name}</b><small>${type}${dist}</small><a href="#" onclick="event.preventDefault();openGooglePlace('${jsName}')" style="font-size:11px;color:#0875ed;text-decoration:none">Open in Google Maps ›</a></div>`;
-    }).join("")+"</div>";
-  };
+  function googleMapsWebUrl(query){
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(String(query||"").trim())}`;
+  }
+
+  function openGoogleMapsCurrentLocation(query){
+    const q=String(query||"").trim();
+    if(!q)return;
+    const status=$("placeSearchStatus");
+    currentCoords(coords=>{
+      if(!coords){if(status)status.textContent="Waiting for current GPS location…";return}
+      if(status)status.textContent=`Google Maps: ${q} near your current GPS position…`;
+      const appUrl=googleMapsAppUrl(q,coords);
+      const webUrl=googleMapsWebUrl(q);
+      let switched=false;
+      const onHide=()=>{if(document.hidden)switched=true};
+      document.addEventListener("visibilitychange",onHide,{once:false});
+      window.location.href=appUrl;
+      setTimeout(()=>{
+        document.removeEventListener("visibilitychange",onHide);
+        if(!switched&&!document.hidden)window.location.assign(webUrl);
+      },900);
+    });
+  }
+
+  /* The original app.js function is a local lexical function, so replacing
+     window.openNearbySearch alone does not replace category/search button
+     handlers. Capture clicks here and stop the original handler. */
+  document.addEventListener("click",e=>{
+    const category=e.target.closest?.(".places-category");
+    if(category){
+      e.preventDefault();e.stopImmediatePropagation();
+      const q=category.dataset.q||category.querySelector(".cat-name")?.textContent||"";
+      if($("placeSearchStatus"))$("placeSearchStatus").textContent=`Searching Google Maps for ${q} at current GPS location…`;
+      openGoogleMapsCurrentLocation(q);
+      return;
+    }
+    const searchButton=e.target.closest?.("#placeSearchBtn");
+    if(searchButton){
+      e.preventDefault();e.stopImmediatePropagation();
+      const input=$("placeSearchInput"),q=input?.value?.trim()||"";
+      if(q)openGoogleMapsCurrentLocation(q);
+      return;
+    }
+    const mapLink=e.target.closest?.(".places-result-card a");
+    if(mapLink){
+      e.preventDefault();e.stopImmediatePropagation();
+      const card=mapLink.closest(".places-result-card");
+      const q=card?.querySelector("b")?.textContent?.trim()||"";
+      if(q)openGoogleMapsCurrentLocation(q);
+    }
+  },true);
+
+  /* Keep a live coordinate copy available to the fix without changing the
+     original app.js variable scope. */
+  setInterval(()=>{
+    if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{
+      window.__gpsViewerLastLat=p.coords.latitude;
+      window.__gpsViewerLastLon=p.coords.longitude;
+    },()=>{}, {enableHighAccuracy:true,maximumAge:5000,timeout:5000});
+  },5000);
+
+  /* Keep the previous direct function available for any external callers. */
+  window.openNearbySearch=function(query){openGoogleMapsCurrentLocation(query)};
 
   const css=document.createElement("style");
   css.textContent=`
