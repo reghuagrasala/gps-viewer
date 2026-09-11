@@ -31,15 +31,15 @@
   }
   setInterval(ensurePostOffice,1500);ensurePostOffice();
 
-  /* IMPORTANT: Google Maps place searching must be LOCATION-FIRST.
-     Do NOT put the road/place name into the search query. Long local road
-     names can cause Google to start the search at the far end of that road.
-     On iPhone, use Google's documented app URL scheme with q + center so the
-     search term is separate from the exact current GPS search center. */
+  /* LOCATION-FIRST GOOGLE MAPS SEARCH
+     The search query contains ONLY the requested category/place name.
+     The current GPS coordinates are supplied separately as the map center.
+     We deliberately do NOT include road name, place name, PIN, or address in
+     the query because a long road/locality can make Google choose its distant
+     end as the search origin. */
   function currentCoords(done){
     getGPS(coords=>{
       if(coords){
-        // Prefer the live GPS reading over the displayed reverse-geocoded name.
         done({lat:Number(coords.latitude),lon:Number(coords.longitude)});
         return;
       }
@@ -54,8 +54,9 @@
     return `comgooglemaps://?q=${encodeURIComponent(q)}&center=${coords.lat.toFixed(6)},${coords.lon.toFixed(6)}&zoom=16`;
   }
 
-  function googleMapsWebUrl(query){
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(String(query||"").trim())}`;
+  function googleMapsWebUrl(query,coords){
+    const q=String(query||"").trim();
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}&center=${coords.lat.toFixed(6)},${coords.lon.toFixed(6)}&zoom=16`;
   }
 
   function openGoogleMapsCurrentLocation(query){
@@ -64,12 +65,12 @@
     const status=$("placeSearchStatus");
     currentCoords(coords=>{
       if(!coords){if(status)status.textContent="Waiting for current GPS location…";return}
-      if(status)status.textContent=`Google Maps: ${q} near your current GPS position…`;
+      if(status)status.textContent=`Google Maps: ${q} — current GPS location`;
       const appUrl=googleMapsAppUrl(q,coords);
-      const webUrl=googleMapsWebUrl(q);
+      const webUrl=googleMapsWebUrl(q,coords);
       let switched=false;
       const onHide=()=>{if(document.hidden)switched=true};
-      document.addEventListener("visibilitychange",onHide,{once:false});
+      document.addEventListener("visibilitychange",onHide);
       window.location.href=appUrl;
       setTimeout(()=>{
         document.removeEventListener("visibilitychange",onHide);
@@ -78,9 +79,8 @@
     });
   }
 
-  /* The original app.js function is a local lexical function, so replacing
-     window.openNearbySearch alone does not replace category/search button
-     handlers. Capture clicks here and stop the original handler. */
+  /* app.js handlers are lexical functions, so intercept Places clicks in the
+     capture phase and prevent the original handler from opening its old URL. */
   document.addEventListener("click",e=>{
     const category=e.target.closest?.(".places-category");
     if(category){
@@ -106,8 +106,8 @@
     }
   },true);
 
-  /* Keep a live coordinate copy available to the fix without changing the
-     original app.js variable scope. */
+  /* Keep a fresh coordinate copy available even though app.js keeps
+     lastPosition private to its script scope. */
   setInterval(()=>{
     if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{
       window.__gpsViewerLastLat=p.coords.latitude;
@@ -115,7 +115,6 @@
     },()=>{}, {enableHighAccuracy:true,maximumAge:5000,timeout:5000});
   },5000);
 
-  /* Keep the previous direct function available for any external callers. */
   window.openNearbySearch=function(query){openGoogleMapsCurrentLocation(query)};
 
   const css=document.createElement("style");
