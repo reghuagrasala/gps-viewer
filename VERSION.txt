@@ -1,4 +1,6 @@
-GPS Viewer GitHub Pages Ready v6
-Full-screen iPhone portrait | Sky-blue UI | 2–3 line address card
-DIGIPIN | Post Office | Offline GPS/cache | HERE/Cloudflare API
-No automatic image fetching | PWA manifest/service worker/icons
+GPS Viewer GitHub Pages Ready v7 — Bug Fixed
+GPS ON/OFF works
+DATA ON/OFF works
+MAP / PLACES / WEATHER / MORE tabs work
+Offline elevation uses last known cached value when device supplies none
+No automatic venue image fetching

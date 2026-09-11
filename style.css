@@ -65,3 +65,17 @@ footer{height:13px;flex:0 0 13px;text-align:center;color:#527aa4;font-size:9px;l
   .weather-main{height:60px;flex-basis:60px}.weather-top{font-size:7px}.temp-row strong{font-size:33px}.weather-icon{font-size:35px}.condition{font-size:10px}
   .tabs{height:48px;flex-basis:48px}.tabs button span{font-size:7px}footer{height:9px;flex-basis:9px;font-size:7px;line-height:9px}
 }
+
+.status-card{border:1px solid var(--border);cursor:pointer;text-align:left;font-family:inherit}
+.status-card:active{transform:scale(.99)}
+.tab-panel{position:absolute;left:20px;right:20px;bottom:68px;max-height:48dvh;z-index:20;padding:12px;overflow:auto;color:var(--ink)}
+.tab-panel[hidden]{display:none}
+.tab-panel h3{margin:0 0 7px;font-size:18px;color:#0862c9}
+.tab-panel p{margin:5px 0;font-size:13px;line-height:1.3}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.panel-item{background:rgba(255,255,255,.7);border-radius:12px;padding:8px}
+.panel-item b{display:block;font-size:14px;margin-top:2px}
+.panel-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.panel-actions button,.panel-actions a{border:0;border-radius:11px;padding:8px 11px;background:#087df1;color:white;text-decoration:none;font:600 12px inherit}
+.place-list{display:grid;gap:6px}.place-item{padding:8px;background:rgba(255,255,255,.72);border-radius:11px}
+.place-item b{font-size:14px}.place-item small{display:block;color:#4b607c;margin-top:2px}

@@ -86,13 +86,14 @@
     </section>
 
     <nav class="tabs" aria-label="Main navigation">
-      <button class="active" type="button">⌂<span>LOCATION</span></button>
-      <button type="button">◫<span>MAP</span></button>
-      <button type="button">●<span>PLACES</span></button>
-      <button type="button">☼<span>WEATHER</span></button>
-      <button type="button">•••<span>MORE</span></button>
+      <button class="active" type="button" data-tab="location">⌂<span>LOCATION</span></button>
+      <button type="button" data-tab="map">◫<span>MAP</span></button>
+      <button type="button" data-tab="places">●<span>PLACES</span></button>
+      <button type="button" data-tab="weather">☼<span>WEATHER</span></button>
+      <button type="button" data-tab="more">•••<span>MORE</span></button>
     </nav>
 
+    <section id="tabPanel" class="tab-panel card" hidden><div id="tabPanelContent"></div></section>
     <footer id="footerNote">Location and weather require data</footer>
   </main>
   <script src="digipin.js"></script>

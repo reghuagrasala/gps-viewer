@@ -108,23 +108,83 @@ async function updateOfflineFallback(lat,lon){
 function updatePosition(pos){
   const previous=lastPosition;lastPosition=pos;const c=pos.coords,lat=c.latitude,lon=c.longitude;
   $("lat").textContent=formatNum(lat)+"° N";$("lon").textContent=formatNum(lon)+"° E";
-  $("elevation").textContent=Number.isFinite(c.altitude)?Math.round(c.altitude)+" m":"—";
+  if(Number.isFinite(c.altitude)){ $("elevation").textContent=Math.round(c.altitude)+" m"; saveLocal("gpsViewer.lastElevation",Math.round(c.altitude)); } else { const le=loadLocal("gpsViewer.lastElevation"); $("elevation").textContent=le!=null?le+" m (last known)":"Unavailable"; }
   $("accuracy").textContent=Number.isFinite(c.accuracy)?Math.round(c.accuracy)+" m":"—";
   $("speed").textContent=kmh(c.speed).toFixed(1)+" km/h";
   const hd=Number.isFinite(c.heading)&&c.heading>=0?Math.round(c.heading)+"° ("+compass(c.heading)+")":"—";$("heading").textContent=hd;
   $("movement").textContent=kmh(c.speed)>1.5?"In motion":"Stationary";
   updateGPSQuality(c.accuracy);
   try{$("digipin").textContent=formatDigiPin(getDigiPin(lat,lon))}catch(e){$("digipin").textContent="Outside India"}
-  if(navigator.onLine){if(movedEnough(previous,pos)){clearTimeout(addressTimer);addressTimer=setTimeout(()=>reverseGeocode(lat,lon),700);fetchWeather(lat,lon)}}
+  if(dataEnabled&&navigator.onLine){if(movedEnough(previous,pos)){clearTimeout(addressTimer);addressTimer=setTimeout(()=>reverseGeocode(lat,lon),700);fetchWeather(lat,lon)}}
   else{ $("footerNote").textContent="Offline: GPS + DIGIPIN + cached results";updateOfflineFallback(lat,lon)}
 }
 function startGPS(){
-  if(!("geolocation" in navigator)){setGPSState("off","GPS UNAVAILABLE");return}
-  navigator.geolocation.watchPosition(updatePosition,err=>{setGPSState("warn",err.code===1?"GPS DENIED":"GPS WEAK")},{"enableHighAccuracy":true,maximumAge:2000,timeout:15000});
+  if(!("geolocation" in navigator)){gpsEnabled=false;setGPSState("off","GPS UNAVAILABLE");return}
+  if(gpsWatchId!==null)navigator.geolocation.clearWatch(gpsWatchId);
+  gpsEnabled=true;setGPSState("","GPS ON");
+  gpsWatchId=navigator.geolocation.watchPosition(updatePosition,err=>{
+    setGPSState("warn",err.code===1?"GPS DENIED":err.code===2?"GPS UNAVAILABLE":"GPS TIMEOUT");
+  },{enableHighAccuracy:true,maximumAge:2000,timeout:15000});
 }
-$("copyDigipin").addEventListener("click",async e=>{e.stopPropagation();const v=$("digipin").textContent;if(v&&v!=="—"&&navigator.clipboard)try{await navigator.clipboard.writeText(v);$("copyDigipin").textContent="✓";setTimeout(()=>$("copyDigipin").textContent="▣",1200)}catch(e){}});
-window.addEventListener("online",()=>{setDataState(true);if(lastPosition){reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true)}});
-window.addEventListener("offline",()=>{setDataState(false);$("footerNote").textContent="Offline: GPS + DIGIPIN + cached results"});
+function stopGPS(){
+  if(gpsWatchId!==null){navigator.geolocation.clearWatch(gpsWatchId);gpsWatchId=null}
+  gpsEnabled=false;setGPSState("off","GPS OFF");
+}
+function toggleGPS(){gpsEnabled?stopGPS():startGPS()}
+function toggleData(){
+  setDataState(!dataEnabled);
+  if(dataEnabled&&lastPosition){
+    reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);
+    fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true);
+  }
+}
+function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function showTab(tab){
+  currentTab=tab;
+  const panel=$("tabPanel"), c=$("tabPanelContent");
+  if(tab==="location"){panel.hidden=true;return}
+  panel.hidden=false;
+  if(tab==="map"){
+    const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;
+    c.innerHTML=lat!=null?`<h3>Map</h3><p>${lat.toFixed(6)}°, ${lon.toFixed(6)}°</p><div class="panel-actions"><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${lat},${lon}">Google Maps</a><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}">OpenStreetMap</a></div>`:"<h3>Map</h3><p>Waiting for GPS location.</p>";
+  }else if(tab==="places"){
+    const places=latestPlaces||[];
+    c.innerHTML="<h3>Nearby Places</h3>"+(places.length?'<div class="place-list">'+places.slice(0,10).map(x=>`<div class="place-item"><b>${escapeHTML(x.name||"Unnamed place")}</b><small>${escapeHTML(x.category||x.type||"Place")} ${x.distanceM!=null?"• "+Math.round(x.distanceM)+" m":""}</small></div>`).join("")+"</div>":"<p>No nearby places yet. Keep DATA ON for an online place lookup.</p>");
+  }else if(tab==="weather"){
+    c.innerHTML=`<h3>Weather</h3><div class="panel-grid"><div class="panel-item">Temperature<b>${$("temperature").textContent}</b></div><div class="panel-item">Feels like<b>${$("feels").textContent}</b></div><div class="panel-item">Humidity<b>${$("humidity").textContent}</b></div><div class="panel-item">Wind<b>${$("wind").textContent}</b></div><div class="panel-item">Clouds<b>${$("clouds").textContent}</b></div><div class="panel-item">UV Index<b>${$("uv").textContent}</b></div></div>`;
+  }else{
+    c.innerHTML=`<h3>More</h3><p>GPS: <b>${gpsEnabled?"ON":"OFF"}</b> &nbsp; Data: <b>${dataEnabled?"ON":"OFF"}</b></p><p>Offline: GPS coordinates, DIGIPIN and cached results.</p><div class="panel-actions"><button id="moreGPS">${gpsEnabled?"Turn GPS OFF":"Turn GPS ON"}</button><button id="moreData">${dataEnabled?"Turn DATA OFF":"Turn DATA ON"}</button></div>`;
+    $("moreGPS").onclick=()=>{toggleGPS();showTab("more")};
+    $("moreData").onclick=()=>{toggleData();showTab("more")};
+  }
+}
+$("gpsStatus").addEventListener("click",toggleGPS);
+$("dataStatus").addEventListener("click",toggleData);
+document.querySelectorAll(".tabs button").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  showTab(btn.dataset.tab);
+}));
+$("copyDigipin").addEventListener("click",async e=>{
+  e.stopPropagation();
+  const v=$("digipin").textContent;
+  if(v&&v!=="—"&&navigator.clipboard)try{
+    await navigator.clipboard.writeText(v);
+    $("copyDigipin").textContent="✓";
+    setTimeout(()=>$("copyDigipin").textContent="▣",1200);
+  }catch(e){}
+});
+window.addEventListener("online",()=>{
+  setDataState(true);
+  if(lastPosition){
+    reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);
+    fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true);
+  }
+});
+window.addEventListener("offline",()=>{
+  setDataState(false);
+  $("footerNote").textContent="Offline: GPS + DIGIPIN + cached results";
+});
 setTimezone();localDateTime();loadLastAddress();setDataState(navigator.onLine);startGPS();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 setInterval(localDateTime,1000);
