@@ -1,0 +1,9 @@
+Corrected GPS Viewer layout:
+- Full-screen portrait viewport; no phone frame or promotional padding.
+- Sky-blue background.
+- Compact address card with space for 2–3 address lines.
+- No automatic venue image fetching.
+- DIGIPIN + Post Office retained.
+- Bottom navigation tabs retained.
+- Frontend uses the existing Cloudflare/HERE Worker for /api/location and /api/weather.
+- Weather is throttled client-side to 10 minutes and cached offline.

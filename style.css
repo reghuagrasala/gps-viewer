@@ -1,0 +1,67 @@
+:root{
+  --sky:#66cef5;--sky2:#bdeeff;--blue:#0875ed;--deep:#10295f;--ink:#09132b;
+  --muted:#405473;--glass:rgba(255,255,255,.88);--border:rgba(255,255,255,.95);
+  --green:#16ad4b;--red:#e93636;--gap:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,Arial,sans-serif;color:var(--ink);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:linear-gradient(145deg,#3fb8f0 0%,#8bdcf8 50%,#d7f4ff 100%)}
+body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(circle at 18% 18%,rgba(255,255,255,.28),transparent 28%),radial-gradient(circle at 85% 45%,rgba(255,255,255,.22),transparent 30%)}
+.app{width:100%;height:100dvh;max-width:760px;margin:0 auto;padding:7px 20px max(5px,env(safe-area-inset-bottom));padding-top:max(7px,env(safe-area-inset-top));display:flex;flex-direction:column;gap:var(--gap);overflow:hidden}
+.card{background:var(--glass);border:1px solid var(--border);box-shadow:0 3px 9px rgba(18,78,130,.13),inset 0 1px 0 rgba(255,255,255,.75);border-radius:15px}
+.titlebar{height:43px;flex:0 0 43px;padding:0 12px;display:flex;align-items:center;justify-content:space-between}
+.titlebar h1{margin:0;font-size:30px;line-height:1;font-weight:780;letter-spacing:-1.1px;color:#081943}
+.titlebar span{font-size:12px;color:#234a78;white-space:nowrap}
+.status-row{height:40px;flex:0 0 40px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.status-card{height:40px;display:flex;align-items:center;padding:0 10px;gap:7px;font-size:17px}
+.status-card.gps{color:#0b9947}.status-card.data{color:#e43832}.status-card .status-icon{font-size:21px;line-height:1}.status-card .status-dot{margin-left:auto;width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 2px rgba(22,173,75,.1)}.status-card.data .status-dot{background:var(--red)}.status-card.off{color:#687083}.status-card.off .status-dot{background:#777}
+.address-card{height:88px;flex:0 0 88px;padding:8px 11px;display:flex;gap:9px;align-items:center;min-width:0;position:relative}
+.place-icon{flex:0 0 52px;text-align:center;font-size:38px;color:#24518b;line-height:1}
+.address-content{min-width:0;overflow:hidden;padding-right:15px}
+.label{font-size:11px;color:#38577f;line-height:1.05;margin-bottom:2px}
+.place-name{font-size:18px;font-weight:720;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.address-line{font-size:13px;line-height:1.15;color:#182c52;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:15px}
+.address-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:27px;color:#10295f}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.compact-row{height:50px;flex:0 0 50px}
+.metric{min-width:0;height:50px;padding:6px 9px;display:flex;flex-direction:column;justify-content:center}
+.metric-label{font-size:10px;color:#405473;letter-spacing:.2px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric strong{font-size:19px;line-height:1.02;margin-top:3px;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copy{float:right;font-size:15px;color:#24518b}
+h2{height:16px;flex:0 0 16px;color:#0862c9;font-size:16px;line-height:16px;margin:0 3px;letter-spacing:.3px}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.position-grid,.weather-grid{height:104px;flex:0 0 104px;grid-template-rows:repeat(2,50px)}
+.metric.small{height:50px;padding:6px 8px;border-radius:14px}
+.metric.small strong{font-size:17px}
+.movement{background:rgba(228,255,232,.92);color:#087c39}.movement .metric-label{color:#197943}
+.weather-main{height:70px;flex:0 0 70px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;min-width:0}
+.weather-info{min-width:0;overflow:hidden}
+.weather-top{display:flex;gap:4px;align-items:center;color:#314a6f;font-size:8px;white-space:nowrap}
+.temp-row{display:flex;align-items:center;gap:5px;margin-top:2px;min-width:0}
+.thermo{font-size:22px;color:#263b65}.temp-row strong{font-size:39px;line-height:.82;letter-spacing:-1.5px}.condition{font-size:12px;font-weight:600;margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.weather-icon{font-size:42px;margin-right:5px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.08))}
+.weather-grid .metric strong{font-size:15px}
+.tabs{height:54px;flex:0 0 54px;background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.95);border-radius:17px;display:grid;grid-template-columns:repeat(5,1fr);box-shadow:0 3px 9px rgba(18,78,130,.10)}
+.tabs button{border:0;background:transparent;color:#0d3e78;font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:3px 0;min-width:0}
+.tabs button:first-child{font-size:23px}.tabs button:not(:first-child){font-size:20px}
+.tabs button span{font-size:9px;font-weight:650;letter-spacing:.1px}
+.tabs button.active{background:#087df1;color:white;border-radius:14px;margin:3px}
+footer{height:13px;flex:0 0 13px;text-align:center;color:#527aa4;font-size:9px;line-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:370px){
+  .app{padding-left:10px;padding-right:10px}.titlebar h1{font-size:27px}.titlebar span{font-size:10px}
+  .status-card{font-size:15px}.address-card{height:84px;flex-basis:84px}.place-icon{flex-basis:43px;font-size:32px}
+  .place-name{font-size:16px}.address-line{font-size:11px}.metric strong{font-size:17px}.metric.small strong{font-size:15px}
+  .weather-grid .metric strong{font-size:13px}.tabs{height:51px;flex-basis:51px}.tabs button span{font-size:8px}
+}
+@media(max-height:760px){
+  :root{--gap:4px}.app{padding-top:max(4px,env(safe-area-inset-top));padding-left:12px;padding-right:12px}
+  .titlebar{height:38px;flex-basis:38px}.titlebar h1{font-size:26px}.titlebar span{font-size:10px}
+  .status-row,.status-card{height:35px}.status-row{flex-basis:35px}
+  .address-card{height:76px;flex-basis:76px;padding:6px 9px}.place-icon{flex-basis:40px;font-size:29px}
+  .place-name{font-size:15px}.address-line{font-size:10.5px}.label{font-size:9px}
+  .compact-row,.metric,.metric.small{height:43px}.compact-row{flex-basis:43px}
+  .metric{padding:5px 7px}.metric-label{font-size:8.5px}.metric strong{font-size:16px}.metric.small strong{font-size:14px}
+  h2{height:14px;flex-basis:14px;font-size:14px;line-height:14px}.position-grid,.weather-grid{height:90px;flex-basis:90px;grid-template-rows:repeat(2,43px)}
+  .weather-main{height:60px;flex-basis:60px}.weather-top{font-size:7px}.temp-row strong{font-size:33px}.weather-icon{font-size:35px}.condition{font-size:10px}
+  .tabs{height:48px;flex-basis:48px}.tabs button span{font-size:7px}footer{height:9px;flex-basis:9px;font-size:7px;line-height:9px}
+}

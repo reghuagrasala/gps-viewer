@@ -1,0 +1,4 @@
+GPS Viewer GitHub Pages Ready v6
+Full-screen iPhone portrait | Sky-blue UI | 2–3 line address card
+DIGIPIN | Post Office | Offline GPS/cache | HERE/Cloudflare API
+No automatic image fetching | PWA manifest/service worker/icons
