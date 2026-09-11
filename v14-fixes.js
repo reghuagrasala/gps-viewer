@@ -4,18 +4,13 @@
   const localGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
   const localSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 
-  function getGPS(done){
-    if(!navigator.geolocation){done(null);return}
-    navigator.geolocation.getCurrentPosition(p=>done(p.coords),()=>done(null),{enableHighAccuracy:true,maximumAge:3000,timeout:10000});
-  }
-
   async function ensurePostOffice(){
     const el=$("postOffice");
     if(!el)return;
     const state=el.textContent.trim();
     if(state!=="—"&&state!=="Finding post office…"&&state!=="Not available")return;
     const text=[$("addressLine3")?.textContent||"",$("placeName")?.textContent||""].join(" ");
-    const m=text.match(/\b(\d{6})\b/);if(!m)return;
+    const m=text.match(/\b(\d{6})\b");if(!m)return;
     const pin=m[1],key="gpsViewer.postOffice."+pin,cached=localGet(key);
     if(cached?.name){el.textContent=cached.name;return}
     if(!navigator.onLine)return;
@@ -31,89 +26,56 @@
   }
   setInterval(ensurePostOffice,1500);ensurePostOffice();
 
-  /* LOCATION-FIRST GOOGLE MAPS SEARCH
-     The search query contains ONLY the requested category/place name.
-     The current GPS coordinates are supplied separately as the map center.
-     We deliberately do NOT include road name, place name, PIN, or address in
-     the query because a long road/locality can make Google choose its distant
-     end as the search origin. */
-  function currentCoords(done){
-    getGPS(coords=>{
-      if(coords){
-        done({lat:Number(coords.latitude),lon:Number(coords.longitude)});
-        return;
-      }
-      const lat=Number(window.__gpsViewerLastLat),lon=Number(window.__gpsViewerLastLon);
-      done(Number.isFinite(lat)&&Number.isFinite(lon)?{lat,lon}:null);
-    });
+  /* Places must use the SAME live GPS position maintained by app.js.
+     Never use road/place/locality names as the search location. */
+  function getLiveAppPosition(){
+    if(typeof lastPosition!=="undefined"&&lastPosition?.coords){
+      const lat=Number(lastPosition.coords.latitude),lon=Number(lastPosition.coords.longitude);
+      if(Number.isFinite(lat)&&Number.isFinite(lon))return {lat,lon};
+    }
+    return null;
   }
 
-  function googleMapsAppUrl(query,coords){
+  function googleMapsCurrentSearchUrl(query,pos){
     const q=String(query||"").trim();
-    if(!q||!coords||!Number.isFinite(coords.lat)||!Number.isFinite(coords.lon))return "";
-    return `comgooglemaps://?q=${encodeURIComponent(q)}&center=${coords.lat.toFixed(6)},${coords.lon.toFixed(6)}&zoom=16`;
-  }
-
-  function googleMapsWebUrl(query,coords){
-    const q=String(query||"").trim();
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}&center=${coords.lat.toFixed(6)},${coords.lon.toFixed(6)}&zoom=16`;
+    if(!q||!pos)return "";
+    /* Google Maps search query contains ONLY the category. The map center is
+       supplied separately through the center parameter, so a long road name
+       can never move the search center. */
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}&center=${pos.lat.toFixed(7)},${pos.lon.toFixed(7)}&zoom=17`;
   }
 
   function openGoogleMapsCurrentLocation(query){
-    const q=String(query||"").trim();
-    if(!q)return;
+    const q=String(query||"").trim();if(!q)return;
     const status=$("placeSearchStatus");
-    currentCoords(coords=>{
-      if(!coords){if(status)status.textContent="Waiting for current GPS location…";return}
-      if(status)status.textContent=`Google Maps: ${q} — current GPS location`;
-      const appUrl=googleMapsAppUrl(q,coords);
-      const webUrl=googleMapsWebUrl(q,coords);
-      let switched=false;
-      const onHide=()=>{if(document.hidden)switched=true};
-      document.addEventListener("visibilitychange",onHide);
-      window.location.href=appUrl;
-      setTimeout(()=>{
-        document.removeEventListener("visibilitychange",onHide);
-        if(!switched&&!document.hidden)window.location.assign(webUrl);
-      },900);
-    });
+    const pos=getLiveAppPosition();
+    if(!pos){if(status)status.textContent="Waiting for current GPS location…";return}
+    const url=googleMapsCurrentSearchUrl(q,pos);
+    if(status)status.textContent=`Google Maps: ${q} • ${pos.lat.toFixed(7)}, ${pos.lon.toFixed(7)}`;
+    window.location.assign(url);
   }
 
-  /* app.js handlers are lexical functions, so intercept Places clicks in the
-     capture phase and prevent the original handler from opening its old URL. */
+  /* Intercept Places controls before the original app.js handlers. */
   document.addEventListener("click",e=>{
     const category=e.target.closest?.(".places-category");
     if(category){
       e.preventDefault();e.stopImmediatePropagation();
-      const q=category.dataset.q||category.querySelector(".cat-name")?.textContent||"";
-      if($("placeSearchStatus"))$("placeSearchStatus").textContent=`Searching Google Maps for ${q} at current GPS location…`;
-      openGoogleMapsCurrentLocation(q);
+      openGoogleMapsCurrentLocation(category.dataset.q||category.querySelector(".cat-name")?.textContent||"");
       return;
     }
     const searchButton=e.target.closest?.("#placeSearchBtn");
     if(searchButton){
       e.preventDefault();e.stopImmediatePropagation();
-      const input=$("placeSearchInput"),q=input?.value?.trim()||"";
-      if(q)openGoogleMapsCurrentLocation(q);
+      openGoogleMapsCurrentLocation($("placeSearchInput")?.value?.trim()||"");
       return;
     }
     const mapLink=e.target.closest?.(".places-result-card a");
     if(mapLink){
       e.preventDefault();e.stopImmediatePropagation();
       const card=mapLink.closest(".places-result-card");
-      const q=card?.querySelector("b")?.textContent?.trim()||"";
-      if(q)openGoogleMapsCurrentLocation(q);
+      openGoogleMapsCurrentLocation(card?.querySelector("b")?.textContent?.trim()||"");
     }
   },true);
-
-  /* Keep a fresh coordinate copy available even though app.js keeps
-     lastPosition private to its script scope. */
-  setInterval(()=>{
-    if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{
-      window.__gpsViewerLastLat=p.coords.latitude;
-      window.__gpsViewerLastLon=p.coords.longitude;
-    },()=>{}, {enableHighAccuracy:true,maximumAge:5000,timeout:5000});
-  },5000);
 
   window.openNearbySearch=function(query){openGoogleMapsCurrentLocation(query)};
 
