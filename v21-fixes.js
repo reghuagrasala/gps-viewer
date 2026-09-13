@@ -4,34 +4,32 @@
 
   /* Guarantee DIGIPIN + POST OFFICE row is above latitude/longitude. */
   function movePostalRow(){
-    const app=document.querySelector("main.app"),digi=$("digipin"),address=document.querySelector(".address-card");
-    if(!app||!digi||!address)return;
+    const address=document.querySelector(".address-card"),digi=$("digipin");
+    if(!address||!digi)return;
     const row=digi.closest("section.two-col");
     if(row)address.insertAdjacentElement("afterend",row);
   }
   movePostalRow();
 
-  /* PIN is always a separate first line; office name is second. */
-  let poBusy=false;
+  /* PIN first, office name second. Guard against MutationObserver recursion. */
+  let lastPOText="";
   function formatPostOffice(){
-    const el=$("postOffice");if(!el||poBusy)return;
+    const el=$("postOffice");if(!el)return;
     const raw=el.textContent.trim();
-    if(!raw||raw==="—"||raw.includes("Finding")||raw==="Not available")return;
+    if(!raw||raw==="—"||raw.includes("Finding")||raw==="Not available"||raw===lastPOText)return;
+    lastPOText=raw;
     let pin="",name=raw;
     const m=raw.match(/\b(\d{6})\b/);
     if(m){pin=m[1];name=raw.replace(/\s*\(?\d{6}\)?\s*/g," ").replace(/[()]/g," ").replace(/\s+/g," ").trim();}
-    if(!pin){const line=$("addressLine3")?.textContent||"";const p=line.match(/\b(\d{6})\b/);if(p)pin=p[1];}
-    poBusy=true;
+    if(!pin){const line=$("addressLine3")?.textContent||"";const p=line.match(/\b\d{6}\b/);if(p)pin=p[0];}
     el.innerHTML=pin?`<span class="po-pin">${pin}</span><span class="po-name">${name}</span>`:`<span class="po-name solo">${name}</span>`;
-    el.classList.toggle("po-long",name.length>16);poBusy=false;
+    el.classList.toggle("po-long",name.length>16);
   }
   const po=$("postOffice");
   if(po)new MutationObserver(formatPostOffice).observe(po,{childList:true,characterData:true,subtree:true});
   setTimeout(formatPostOffice,100);
 
-  /* Ask Open-Meteo directly for current visibility and UV. Retry while the
-     weather card is still empty, because the main weather request can finish
-     before the extras request has a GPS coordinate to use. */
+  /* Fill visibility and UV index from the exact current GPS coordinate. */
   let busy=false,lastAttempt=0;
   async function fillWeatherExtras(force=false){
     if(!navigator.onLine||busy)return;
@@ -53,9 +51,8 @@
   }
   const retry=setInterval(()=>{
     const v=$("visibility")?.textContent?.trim(),u=$("uv")?.textContent?.trim();
-    if((!v||v==="—")||(!u||u==="—"))fillWeatherExtras(true);
-    else clearInterval(retry);
-  },3000);
+    if((!v||v==="—")||(!u||u==="—"))fillWeatherExtras(true);else clearInterval(retry);
+  },5000);
   setTimeout(()=>fillWeatherExtras(true),1200);
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)fillWeatherExtras(true)});
 
