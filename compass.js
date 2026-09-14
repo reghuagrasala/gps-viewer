@@ -2,7 +2,7 @@
 (function(){
   let active=false, magneticHeading=null, needleAngle=null;
   const getEl=()=>document.getElementById('heading');
-  const getNeedle=()=>document.querySelector('.compass-needle');
+  const getNeedle=()=>document.querySelector('.compass-needle, .heading-north');
   function normalize(v){v=Number(v);if(!Number.isFinite(v))return null;return ((v%360)+360)%360}
   function rounded(v){return Math.round(v)%360}
   function dir(v){const names=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return names[Math.round(v/22.5)%16]}
