@@ -24,7 +24,7 @@
   <div class="metric"><div class="metric-label">time zone <span class="metric-icon">◷</span></div><strong id="timezone">Calcutta</strong></div>
   <div class="metric"><div class="metric-label">accuracy <span class="metric-icon">◎</span></div><strong id="accuracy">—</strong></div>
   <div class="metric"><div class="metric-label">speed <span class="metric-icon">◔</span></div><strong id="speed">0.0 km/h</strong></div>
-  <div class="metric"><div class="metric-label">heading <span class="metric-icon">➤</span></div><strong id="heading">—</strong></div>
+  <div class="metric compass-card" role="button" tabindex="0" aria-label="Activate compass; tap to allow motion and orientation access"><div class="metric-label">heading <span class="metric-icon">➤</span></div><strong id="heading">—</strong></div>
   <div class="metric"><div class="metric-label">date <span class="metric-icon">▣</span></div><strong id="gpsDate">—</strong></div>
   <div class="metric"><div class="metric-label">time <span class="metric-icon">◷</span></div><strong id="gpsTime">—</strong></div>
 </section>
@@ -43,7 +43,6 @@
 </section>
 <section id="fullScreenView" class="fullscreen-view" hidden aria-modal="true" role="dialog"><button id="fullScreenBack" class="fullscreen-back" type="button" aria-label="Back">‹ <span>Back</span></button><div id="fullScreenContent" class="fullscreen-content"></div></section>
 <footer id="footerNote">Location and weather updated automatically</footer>
-<!-- Compatibility state elements used by the stable GPS engine. They are intentionally hidden; the visible Home Screen above mirrors their live values. -->
 <div class="legacy-state" aria-hidden="true">
   <span id="placeIcon">⌖</span><span id="digipin">—</span><span id="postOffice">—</span>
   <span id="movement">Stationary</span><span id="temperaturePosition">—</span>
@@ -51,7 +50,7 @@
   <button id="copyDigipin" type="button">Copy</button>
 </div>
 </main>
-<script src="digipin.js"></script><script src="offline-cache.js"></script><script src="config.js"></script><script src="app.js"></script>
+<script src="digipin.js"></script><script src="offline-cache.js"></script><script src="config.js"></script><script src="app.js"></script><script src="compass.js"></script>
 <script>
 (function(){
  function sync(){
