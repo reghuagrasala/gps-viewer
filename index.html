@@ -16,7 +16,7 @@
 <header class="titlebar"><h1>GPS Viewer</h1><span>GPS works offline</span></header>
 <section class="status-row"><button class="status-card gps" id="gpsStatus" type="button" aria-label="Toggle GPS"><b>GPS ON</b><i class="status-dot"></i></button><button class="status-card data" id="dataStatus" type="button" aria-label="Toggle mobile data"><b>DATA ON</b><i class="status-dot"></i></button></section>
 <section class="address-card"><div class="address-content"><div class="label">Current Location</div><div class="place-name" id="placeName">Waiting for GPS location…</div><div class="address-line location-digi" id="locationDigi">DIGIPIN: —</div><div class="address-line location-po" id="locationPO">PO. —</div><div class="address-line location-area" id="addressLine3"></div><div class="address-line hidden-address" id="addressLine2"></div></div><div class="location-pin">📍</div></section>
-<h2>GPS DATA</h2>
+<div class="section-title"><h2>GPS DATA</h2><button class="share-btn" id="shareGps" type="button" aria-label="Share GPS data">↗</button></div>
 <section class="three-col position-grid">
   <div class="metric"><div class="metric-label">latitude <span class="metric-icon">◎</span></div><strong id="lat">—</strong></div>
   <div class="metric"><div class="metric-label">longitude <span class="metric-icon">◎</span></div><strong id="lon">—</strong></div>
@@ -28,7 +28,7 @@
   <div class="metric"><div class="metric-label">date <span class="metric-icon">▣</span></div><strong id="gpsDate">—</strong></div>
   <div class="metric"><div class="metric-label">time <span class="metric-icon">◷</span></div><strong id="gpsTime">—</strong></div>
 </section>
-<h2>CURRENT WEATHER</h2>
+<div class="section-title"><h2>CURRENT WEATHER</h2><button class="share-btn" id="shareWeather" type="button" aria-label="Share current weather">↗</button></div>
 <section class="weather-main"><div class="weather-info"><div class="temp-row"><span class="thermo">☁</span><strong id="temperature">—°</strong><span class="condition" id="condition">Weather needs data</span></div></div><div class="weather-icon" id="weatherIcon">☁️</div></section>
 <section class="three-col weather-grid">
   <div class="metric"><div class="metric-label">Feels like <span class="metric-icon">♨</span></div><strong id="feels">—</strong></div>
@@ -61,7 +61,10 @@
    const d2=document.getElementById('weatherDate2'),t2=document.getElementById('weatherTime2'),gd=document.getElementById('gpsDate'),gt=document.getElementById('gpsTime');
    if(d1&&d2)d2.textContent=d1.textContent;if(t1&&t2)t2.textContent=t1.textContent;if(d1&&gd)gd.textContent=d1.textContent;if(t1&&gt)gt.textContent=t1.textContent;
  }
- window.addEventListener('load',()=>{sync();setInterval(sync,1000)});
+ function text(id){return (document.getElementById(id)?.textContent||'—').trim()}
+ async function share(title,message){try{if(navigator.share){await navigator.share({title,text:message})}else{await navigator.clipboard.writeText(message);alert('Copied to clipboard')}}catch(e){if(e.name!=='AbortError')try{await navigator.clipboard.writeText(message);alert('Copied to clipboard')}catch(_){}}}
+ function bindShare(){document.getElementById('shareGps')?.addEventListener('click',()=>share('GPS Viewer',`GPS Viewer\nLatitude: ${text('lat')}\nLongitude: ${text('lon')}\nElevation: ${text('elevation')}\nAccuracy: ${text('accuracy')}\nSpeed: ${text('speed')}\nHeading: ${text('heading')}\nDIGIPIN: ${text('digipin')}\n${text('placeName')}\n${text('locationPO')}`));document.getElementById('shareWeather')?.addEventListener('click',()=>share('GPS Viewer Weather',`Current Weather\nTemperature: ${text('temperature')}\nCondition: ${text('condition')}\nFeels like: ${text('feels')}\nWind: ${text('wind')}\nGusts: ${text('gusts')}\nVisibility: ${text('visibility')}\nHumidity: ${text('humidity')}\nClouds: ${text('clouds')}\nUV index: ${text('uv')}`))}
+ window.addEventListener('load',()=>{sync();bindShare();setInterval(sync,1000)});
 })();
 </script>
 </body></html>
