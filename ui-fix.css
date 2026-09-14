@@ -1,0 +1,23 @@
+/* GPS Viewer UI refinement v31 */
+:root{--gap:10px}
+.app{gap:10px}
+.titlebar{height:42px;flex:0 0 42px}
+.status-row{height:40px;flex:0 0 40px;gap:10px}
+.status-card{height:40px}
+.address-card{height:128px;flex:0 0 128px;padding-top:10px}
+.address-content{padding-right:48px}
+.address-card .label-row{position:relative;justify-content:flex-start;padding-right:38px}
+.address-card .address-share{position:absolute;right:0;top:-2px;width:34px!important;height:28px!important;min-width:34px;display:flex!important;visibility:visible!important;opacity:1!important;border:2px solid #d4af37;border-radius:9px;background:#d4af37;color:#121316;font-size:17px;line-height:24px;z-index:5;box-shadow:0 2px 7px rgba(0,0,0,.55)}
+.location-area{display:block!important;visibility:visible!important;min-height:17px}
+.section-title{height:28px;flex:0 0 28px;margin-top:2px}
+.section-title h2{font-size:16px;line-height:28px}
+.share-btn{display:flex!important;visibility:visible!important;opacity:1!important;width:34px;height:28px;min-width:34px;border:2px solid #d4af37;border-radius:9px;background:#d4af37;color:#121316;font-size:17px;line-height:24px;box-shadow:0 2px 7px rgba(0,0,0,.55);position:relative;z-index:5}
+.share-btn:active{transform:scale(.94);filter:brightness(.88)}
+.three-col{gap:8px}
+.metric{height:52px;padding:5px 9px;border-radius:14px}
+.metric-label{font-size:11.5px}
+.metric strong{font-size:15.5px;margin-top:4px}
+.weather-main{height:84px;flex:0 0 84px;padding:9px 13px}
+.weather-grid .metric{height:50px}
+.weather-grid .metric strong{font-size:13.5px}
+@media (max-height:760px){:root{--gap:7px}.app{gap:7px}.titlebar{height:38px;flex-basis:38px}.status-row{height:36px;flex-basis:36px}.status-card{height:36px}.address-card{height:112px;flex-basis:112px}.section-title{height:23px;flex-basis:23px}.section-title h2{line-height:23px}.metric{height:47px}.weather-main{height:76px;flex-basis:76px}.weather-grid .metric{height:45px}}
