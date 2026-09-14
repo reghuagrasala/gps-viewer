@@ -14,8 +14,8 @@
 <body>
 <main class="app">
 <header class="titlebar"><h1>GPS Viewer</h1><span>GPS works offline</span></header>
-<section class="status-row"><button class="status-card gps" id="gpsStatus" type="button" aria-label="Toggle GPS"><span class="status-icon">📍</span><b>GPS ON</b><i class="status-dot"></i></button><button class="status-card data" id="dataStatus" type="button" aria-label="Toggle mobile data"><span class="status-icon">▤</span><b>DATA ON</b><i class="status-dot"></i></button></section>
-<section class="address-card"><div class="place-icon" id="placeIcon">⌖</div><div class="address-content"><div class="label">Current Location</div><div class="place-name" id="placeName">Waiting for GPS location…</div><div class="address-line strong-line" id="addressLine2"></div><div class="address-line" id="addressLine3"></div></div><div class="location-pin">📍</div></section>
+<section class="status-row"><button class="status-card gps" id="gpsStatus" type="button" aria-label="Toggle GPS"><b>GPS ON</b><i class="status-dot"></i></button><button class="status-card data" id="dataStatus" type="button" aria-label="Toggle mobile data"><b>DATA ON</b><i class="status-dot"></i></button></section>
+<section class="address-card"><div class="address-content"><div class="label">Current Location</div><div class="place-name" id="placeName">Waiting for GPS location…</div><div class="address-line location-digi" id="locationDigi">DIGIPIN: —</div><div class="address-line location-po" id="locationPO">PO. —</div><div class="address-line location-area" id="addressLine3"></div><div class="address-line hidden-address" id="addressLine2"></div></div><div class="location-pin">📍</div></section>
 <h2>GPS DATA</h2>
 <section class="three-col position-grid">
   <div class="metric"><div class="metric-label">latitude <span class="metric-icon">◎</span></div><strong id="lat">—</strong></div>
@@ -41,10 +41,18 @@
   <div class="metric"><div class="metric-label">date <span class="metric-icon">▣</span></div><strong id="weatherDate2">—</strong></div>
   <div class="metric"><div class="metric-label">Time <span class="metric-icon">◷</span></div><strong id="weatherTime2">—</strong></div>
 </section>
-<section class="utility-row"><div class="utility-card"><span>▦</span><b>DIGIPIN</b><strong id="digipin">—</strong><button id="copyDigipin" type="button" aria-label="Copy DIGIPIN">▣</button></div><div class="utility-card"><span>✉</span><b>POST OFFICE</b><strong id="postOffice">—</strong></div></section>
 <section id="fullScreenView" class="fullscreen-view" hidden aria-modal="true" role="dialog"><button id="fullScreenBack" class="fullscreen-back" type="button" aria-label="Back">‹ <span>Back</span></button><div id="fullScreenContent" class="fullscreen-content"></div></section>
 <footer id="footerNote">Location and weather updated automatically</footer>
 </main>
 <script src="digipin.js"></script><script src="offline-cache.js"></script><script src="config.js"></script><script src="app.js"></script>
-<script>window.addEventListener('load',()=>{const sync=()=>{const d=document.getElementById('weatherDate'),t=document.getElementById('weatherTime');const d2=document.getElementById('weatherDate2'),t2=document.getElementById('weatherTime2'),gd=document.getElementById('gpsDate'),gt=document.getElementById('gpsTime');if(d&&d2)d2.textContent=d.textContent;if(t&&t2)t2.textContent=t.textContent;if(d&&gd)gd.textContent=d.textContent;if(t&&gt)gt.textContent=t.textContent};sync();setInterval(sync,1000)});</script>
+<script>
+(function(){
+ function sync(){
+   const d=document.getElementById('digipin'),p=document.getElementById('postOffice'),dl=document.getElementById('locationDigi'),pl=document.getElementById('locationPO');
+   if(d&&dl) dl.textContent='DIGIPIN: '+(d.textContent||'—').trim();
+   if(p&&pl){let raw=(p.textContent||'—').replace(/\s+/g,' ').trim();let pin=(raw.match(/\d{6}/)||[])[0]||'';let name=raw.replace(/\(?\d{6}\)?/g,'').replace(/^Finding post office…$/,'').trim();pl.textContent='PO. '+(pin?(name+' - '+pin):name||'—')}
+ }
+ window.addEventListener('load',()=>{sync();setInterval(sync,1000)});
+})();
+</script>
 </body></html>
