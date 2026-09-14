@@ -1,4 +1,4 @@
-/* GPS Viewer UI refinement v38 */
+/* GPS Viewer UI refinement v39 */
 :root{--ui-gap:clamp(7px,1.15vh,10px)}
 html,body{background:linear-gradient(to bottom,#121316 0%,#121316 72%,#303642 100%)!important}
 body{min-height:100dvh!important;position:fixed!important;inset:0!important}
