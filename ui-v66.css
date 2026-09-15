@@ -19,5 +19,10 @@
 .weather-main .weather-info{order:1!important;flex:1 1 auto!important;min-width:0!important}
 .weather-main .temp-row{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
 .weather-main .modern-weather-icon{display:block!important;width:52px!important;height:52px!important;object-fit:contain!important}
+/* Minimal width refinement: preserve the three-column geometry while giving each card a little more usable text area. */
+.three-col{gap:5px!important}
+.position-row{gap:5px!important}
+.weather-grid{gap:5px!important}
+.position-row .metric,.weather-grid .metric{padding-left:6px!important;padding-right:6px!important}
 @media (min-height:901px){.address-card #addressLine2,.address-card .location-po,.address-card #addressLine3,.address-card #addressLine4{font-size:13.5px!important;line-height:1.22!important}.address-card .place-name{font-size:13.5px!important;line-height:1.22!important}}
 @media (display-mode:standalone){html,body{background:#121316!important;height:100vh!important;min-height:100vh!important}body{overflow:hidden!important}.app{height:100vh!important;min-height:100vh!important;max-height:100vh!important;padding-bottom:0!important;overflow:hidden!important;background:#121316!important}}
