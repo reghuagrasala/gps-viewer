@@ -1,4 +1,4 @@
-/* GPS Viewer v66 address normalization + automatic text/icon fitting. */
+/* GPS Viewer v66 address normalization + automatic text/icon fitting + modern weather icon. */
 (function(){
   function text(id){return (document.getElementById(id)?.textContent||'').trim()}
   function ensureCountryLine(){
@@ -19,35 +19,34 @@
     country.textContent='India';
     country.style.display='block';country.style.visibility='visible';
   }
-
-  /* Fit each label/icon pair and each value to its existing box.
-     This only reduces font size when text would overflow; card geometry is unchanged. */
   function fitElement(el,max,min){
     if(!el)return;
-    const computed=getComputedStyle(el), base=parseFloat(computed.fontSize)||max;
+    const computed=getComputedStyle(el),base=parseFloat(computed.fontSize)||max;
     let size=Math.min(max,base);
-    el.style.fontSize=size+'px';
-    el.style.whiteSpace='nowrap';
+    el.style.fontSize=size+'px';el.style.whiteSpace='nowrap';
     let guard=0;
-    while(el.scrollWidth>el.clientWidth+0.5 && size>min && guard++<20){
-      size=Math.max(min,size-0.25);
-      el.style.fontSize=size+'px';
-    }
+    while(el.scrollWidth>el.clientWidth+0.5&&size>min&&guard++<20){size=Math.max(min,size-0.25);el.style.fontSize=size+'px'}
   }
   function fitDashboardText(){
     document.querySelectorAll('.position-grid .metric-label,.weather-grid .metric-label').forEach(el=>fitElement(el,13.5,10.5));
     document.querySelectorAll('.position-grid .metric strong,.weather-grid .metric strong').forEach(el=>fitElement(el,13.5,10.5));
-    document.querySelectorAll('.weather-main .condition').forEach(el=>fitElement(el,13.5,10.5));
+    document.querySelectorAll('.weather-main .condition').forEach(el=>fitElement(el,14,11));
+  }
+  function setModernWeatherIcon(){
+    const box=document.getElementById('weatherIcon');
+    if(!box)return;
+    if(box.dataset.modernIcon==='1')return;
+    box.textContent='';
+    const img=document.createElement('img');
+    img.src='./weather-icons.svg';img.alt='';img.setAttribute('aria-hidden','true');
+    img.className='modern-weather-icon';
+    box.appendChild(img);box.dataset.modernIcon='1';
   }
   function watchDashboard(){
-    fitDashboardText();
-    if(window.ResizeObserver){
-      const ro=new ResizeObserver(fitDashboardText);
-      document.querySelectorAll('.position-grid,.weather-grid,.weather-main').forEach(el=>ro.observe(el));
-    }
-    setInterval(fitDashboardText,1000);
+    fitDashboardText();setModernWeatherIcon();
+    if(window.ResizeObserver){const ro=new ResizeObserver(()=>{fitDashboardText();setModernWeatherIcon()});document.querySelectorAll('.position-grid,.weather-grid,.weather-main').forEach(el=>ro.observe(el))}
+    setInterval(()=>{fitDashboardText();setModernWeatherIcon()},1000);
   }
-
-  function start(){ensureCountryLine();setInterval(ensureCountryLine,400);watchDashboard();}
+  function start(){ensureCountryLine();setInterval(ensureCountryLine,400);watchDashboard()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
