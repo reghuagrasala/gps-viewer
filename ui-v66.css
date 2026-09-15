@@ -5,10 +5,12 @@
 .address-card #addressLine4{order:5!important;display:block!important;visibility:visible!important;color:#d8d3a0!important;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important;font-size:13.5px!important;line-height:1.22!important;font-weight:400!important;white-space:normal!important;overflow:visible!important}
 .address-card .place-name{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important;font-size:13.5px!important;line-height:1.22!important;font-weight:500!important;color:#d8d3a0!important}
 .address-card .location-po,.address-card #addressLine3,.address-card #addressLine2{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important;font-size:13.5px!important;line-height:1.22!important;font-weight:400!important;letter-spacing:0!important}
-/* Apply the same Current Location typography to GPS Data and Current Weather, with no layout changes. */
+/* Same Current Location typography across GPS Data and Current Weather. */
 .section-title h2,.position-grid,.position-grid .metric,.position-grid .metric-label,.position-grid .metric strong,.weather-main,.weather-main .temp-row,.weather-main #temperature,.weather-main .condition,.weather-grid,.weather-grid .metric,.weather-grid .metric-label,.weather-grid .metric strong{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important}
-.position-grid .metric-label,.weather-grid .metric-label{font-size:13.5px!important;line-height:1.22!important;font-weight:400!important}
-.position-grid .metric strong,.weather-grid .metric strong{font-size:13.5px!important;line-height:1.22!important;font-weight:500!important}
-.weather-main #temperature,.weather-main .condition{font-size:13.5px!important;line-height:1.22!important;font-weight:500!important}
+/* Compact text vertically so every label/icon/value stays inside its existing card. */
+.position-grid .metric-label,.weather-grid .metric-label{font-size:13.5px!important;line-height:1!important;font-weight:400!important;margin:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important}
+.position-grid .metric strong,.weather-grid .metric strong{font-size:13.5px!important;line-height:1!important;font-weight:500!important;margin-top:1px!important;display:block!important}
+.position-grid .metric-icon,.weather-grid .metric-icon{display:inline-block!important;margin-left:3px!important;vertical-align:middle!important;line-height:1!important;font-size:.9em!important;transform:none!important}
+.weather-main #temperature,.weather-main .condition{font-size:13.5px!important;line-height:1.05!important;font-weight:500!important}
 @media (min-height:901px){.address-card #addressLine2,.address-card .location-po,.address-card #addressLine3,.address-card #addressLine4{font-size:13.5px!important;line-height:1.22!important}.address-card .place-name{font-size:13.5px!important;line-height:1.22!important}}
 @media (display-mode:standalone){html,body{background:#121316!important;height:100vh!important;min-height:100vh!important}body{overflow:hidden!important}.app{height:100vh!important;min-height:100vh!important;max-height:100vh!important;padding-bottom:0!important;overflow:hidden!important;background:#121316!important}}
