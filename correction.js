@@ -12,6 +12,13 @@
     if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(v);
     const ta=document.createElement('textarea');ta.value=v;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();return Promise.resolve();
   }
+  function prepareLocationCard(){
+    const content=document.querySelector('.address-card .address-content');
+    const pin=document.querySelector('.address-card .location-pin');
+    if(content&&pin&&pin.parentElement!==content)content.appendChild(pin);
+    const btn=$('suggestCorrection');
+    if(btn){btn.textContent='↗';btn.title='Suggest a map correction';btn.setAttribute('aria-label','Suggest a map correction');}
+  }
   function reportData(){
     const c=coords();
     return {c,place:text('placeName'),area:text('addressLine3'),po:text('locationPO'),digi:text('locationDigi')};
@@ -63,6 +70,7 @@
     el.addEventListener('click',e=>{if(e.target===el)close()});
   }
   function bind(){
+    prepareLocationCard();
     const old=$('suggestCorrection');if(!old)return;
     const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',show);
   }
