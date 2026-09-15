@@ -6,5 +6,10 @@
 .address-card .place-name{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important;font-size:13.5px!important;line-height:1.22!important;font-weight:500!important;color:#d8d3a0!important}
 .address-card .location-po,.address-card #addressLine3,.address-card #addressLine2{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important;font-size:13.5px!important;line-height:1.22!important;font-weight:400!important;letter-spacing:0!important}
 .address-card .address-content{padding-right:0!important;overflow-y:auto!important;touch-action:pan-y!important}
+/* Match GPS Data and Current Weather typography to Current Location without changing layout metrics. */
+.section-title h2,.position-grid,.position-grid .metric,.position-grid .metric-label,.position-grid .metric strong,.weather-main,.weather-main .temp-row,.weather-main #temperature,.weather-main .condition,.weather-grid,.weather-grid .metric,.weather-grid .metric-label,.weather-grid .metric strong{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif!important}
+.position-grid .metric-label,.weather-grid .metric-label{font-weight:400!important}
+.position-grid .metric strong,.weather-grid .metric strong{font-weight:500!important}
+.weather-main #temperature,.weather-main .condition{font-weight:500!important}
 @media (min-height:901px){.address-card #addressLine2,.address-card .location-po,.address-card #addressLine3,.address-card #addressLine4{font-size:13.5px!important;line-height:1.22!important}.address-card .place-name{font-size:13.5px!important;line-height:1.22!important}}
 @media (display-mode:standalone){html,body{background:#121316!important;height:100vh!important;min-height:100vh!important}body{overflow:hidden!important}.app{height:100vh!important;min-height:100vh!important;max-height:100vh!important;padding-bottom:0!important;overflow:hidden!important;background:#121316!important}}
