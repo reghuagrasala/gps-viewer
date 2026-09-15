@@ -10,7 +10,12 @@
 .position-grid .metric strong,.weather-grid .metric strong{font-size:13.5px!important;line-height:1!important;font-weight:500!important;margin-top:1px!important;display:block!important}
 .position-grid .metric-icon,.weather-grid .metric-icon{display:inline-block!important;margin-left:3px!important;vertical-align:middle!important;line-height:1!important;font-size:.9em!important;transform:none!important}
 .weather-main #temperature,.weather-main .condition{font-size:13.5px!important;line-height:1.05!important;font-weight:500!important}
-.weather-main .weather-icon{display:flex!important;align-items:center!important;justify-content:center!important;width:58px!important;height:58px!important;flex:0 0 58px!important}
+/* One weather icon only: remove the legacy cloud marker and keep the generated icon on the left. */
+.weather-main .thermo{display:none!important}
+.weather-main{display:flex!important;align-items:center!important;gap:10px!important}
+.weather-main .weather-icon{display:flex!important;order:0!important;align-items:center!important;justify-content:center!important;width:58px!important;height:58px!important;flex:0 0 58px!important}
+.weather-main .weather-info{order:1!important;flex:1 1 auto!important;min-width:0!important}
+.weather-main .temp-row{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
 .weather-main .modern-weather-icon{display:block!important;width:52px!important;height:52px!important;object-fit:contain!important}
 @media (min-height:901px){.address-card #addressLine2,.address-card .location-po,.address-card #addressLine3,.address-card #addressLine4{font-size:13.5px!important;line-height:1.22!important}.address-card .place-name{font-size:13.5px!important;line-height:1.22!important}}
 @media (display-mode:standalone){html,body{background:#121316!important;height:100vh!important;min-height:100vh!important}body{overflow:hidden!important}.app{height:100vh!important;min-height:100vh!important;max-height:100vh!important;padding-bottom:0!important;overflow:hidden!important;background:#121316!important}}
