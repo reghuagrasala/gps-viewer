@@ -25,3 +25,14 @@
 .position-row .metric,.weather-grid .metric{padding-left:6px!important;padding-right:6px!important}
 @media (min-height:901px){.address-card #addressLine2,.address-card .location-po,.address-card #addressLine3,.address-card #addressLine4{font-size:13.5px!important;line-height:1.22!important}.address-card .place-name{font-size:13.5px!important;line-height:1.22!important}}
 @media (display-mode:standalone){html,body{background:#121316!important;height:100vh!important;min-height:100vh!important}body{overflow:hidden!important}.app{height:100vh!important;min-height:100vh!important;max-height:100vh!important;padding-bottom:0!important;overflow:hidden!important;background:#121316!important}}
+/* GPS Data arrangement only: preserve the existing dashboard geometry while reordering the three rows. */
+.position-grid .position-row.equal-row {
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.position-grid .position-row.equal-row .metric {
+  min-width:0!important;
+  width:auto!important;
+}
+.position-grid .position-row.equal-row .compass-card {
+  height:47px!important;
+}
