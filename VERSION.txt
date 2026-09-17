@@ -1,1 +1,1 @@
-GPS Viewer v14 — address proxy restored, GPS Data compass row refined
+GPS Viewer v15 — reverse-geocoding endpoint fallback restored; compass needle repositioned

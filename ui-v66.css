@@ -47,7 +47,7 @@
 .position-grid .compass-card::after {
   content:"";
   position:absolute;
-  left:88%;
+  left:80%;
   top:50%;
   width:5px;
   height:27px;
@@ -63,7 +63,7 @@
 .position-grid .compass-card::before {
   content:"";
   position:absolute;
-  left:88%;
+  left:80%;
   top:50%;
   width:8px;
   height:8px;
