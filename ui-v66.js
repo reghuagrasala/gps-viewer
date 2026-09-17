@@ -18,7 +18,23 @@
   function moonSVG(phase,cloud){const p=Math.round(phase*8)%8;const waxing=phase<0.5;const full=p===4,newMoon=p===0;const moon=newMoon?'':`<circle cx="42" cy="39" r="27" fill="#ffe47a"/><circle cx="${waxing?'52':'32'}" cy="39" r="27" fill="#151a25"/>`;const fullMoon=full?'<circle cx="42" cy="39" r="27" fill="#ffe47a"/>':'';const cloudPart=cloud?'<path d="M16 65c0-8 7-14 15-14 3-10 12-17 23-17 13 0 24 9 27 21 8 0 15 6 15 14 0 8-7 14-15 14H32c-9 0-16-7-16-18z" fill="#f0f4f8" stroke="#c7d0da" stroke-width="2"/>':'';return `<svg class="modern-weather-icon" viewBox="0 0 112 92" aria-hidden="true"><defs><filter id="ws"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".35"/></filter></defs><g filter="url(#ws)">${moon||fullMoon}${cloudPart}</g></svg>`}
   function daySVG(cloud){const c=cloud?'<circle cx="38" cy="38" r="18" fill="#ffe45b"/><path d="M18 64c0-8 7-14 15-14 3-10 12-17 23-17 13 0 24 9 27 21 8 0 15 6 15 14 0 8-7 14-15 14H34c-9 0-16-7-16-18z" fill="#eef3f8" stroke="#cbd5df" stroke-width="2"/>':'<circle cx="40" cy="40" r="20" fill="#ffe45b"/><g stroke="#ffe45b" stroke-width="4" stroke-linecap="round"><path d="M40 8v9M40 63v9M8 40h9M63 40h9M18 18l7 7M55 55l7 7M62 18l-7 7M25 55l-7 7"/></g>';return `<svg class="modern-weather-icon" viewBox="0 0 112 92" aria-hidden="true">${c}</svg>`}
   function updateWeatherIcon(){const el=document.getElementById('weatherIcon');if(!el)return;const condition=text('condition').toLowerCase();if(!condition||condition==='weather needs data')return;const h=new Date().getHours();const night=h<6||h>=18;const cloudy=/cloud|overcast|fog|rain|drizzle|shower|thunder|snow/.test(condition);const svg=night?moonSVG(moonPhase(),cloudy):daySVG(cloudy);if(el.innerHTML!==svg)el.innerHTML=svg;el.title=night?'Night • moon phase and weather':'Daytime • weather'}
+  function setWeatherExtraCards(){
+    const grid=document.querySelector('.weather-grid');if(!grid)return;
+    const cards=grid.querySelectorAll('.metric');if(cards.length<9)return;
+    const aqiCard=cards[7],pressureCard=cards[8];
+    const aqiLabel=aqiCard.querySelector('.metric-label'),aqiValue=aqiCard.querySelector('strong');
+    const pressureLabel=pressureCard.querySelector('.metric-label'),pressureValue=pressureCard.querySelector('strong');
+    if(aqiLabel)aqiLabel.innerHTML='AQI <span class="metric-icon">●</span>';
+    if(pressureLabel)pressureLabel.innerHTML='Air Pressure <span class="metric-icon">▣</span>';
+    /* Values remain ready for the new weather providers; until their AQI/pressure fields are wired in, show a neutral placeholder rather than the old date/time. */
+    if(aqiValue&&!aqiValue.dataset.weatherBound)aqiValue.textContent='—';
+    if(pressureValue&&!pressureValue.dataset.weatherBound)pressureValue.textContent='—';
+  }
+  function watchWeatherCards(){
+    setWeatherExtraCards();
+    setInterval(setWeatherExtraCards,250);
+  }
   function watchWeatherIcon(){updateWeatherIcon();setInterval(updateWeatherIcon,1000);const condition=document.getElementById('condition');if(condition&&window.MutationObserver)new MutationObserver(()=>setTimeout(updateWeatherIcon,0)).observe(condition,{childList:true,characterData:true,subtree:true})}
-  function start(){ensureCountryLine();setInterval(ensureCountryLine,400);fitDashboardText();if(window.ResizeObserver){const ro=new ResizeObserver(fitDashboardText);document.querySelectorAll('.position-grid,.weather-grid,.weather-main').forEach(el=>ro.observe(el))}setInterval(fitDashboardText,1000);watchWeatherIcon()}
+  function start(){ensureCountryLine();setInterval(ensureCountryLine,400);fitDashboardText();if(window.ResizeObserver){const ro=new ResizeObserver(fitDashboardText);document.querySelectorAll('.position-grid,.weather-grid,.weather-main').forEach(el=>ro.observe(el))}setInterval(fitDashboardText,1000);watchWeatherIcon();watchWeatherCards()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
