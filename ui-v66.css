@@ -33,6 +33,48 @@
   min-width:0!important;
   width:auto!important;
 }
-.position-grid .position-row.equal-row .compass-card {
+/* Heading gets the extra width; Accuracy and Speed shrink equally. */
+.position-grid .position-row.equal-row.compass-row {
+  grid-template-columns:minmax(0,1.35fr) minmax(0,.825fr) minmax(0,.825fr)!important;
+}
+.position-grid .position-row.equal-row.compass-row .compass-card {
   height:47px!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  position:relative!important;
+}
+/* Keep the compass needle fully visible for north as well as all other headings. */
+.position-grid .compass-card::after {
+  content:"";
+  position:absolute;
+  left:88%;
+  top:50%;
+  width:5px;
+  height:27px;
+  border-radius:3px;
+  background:#39ff14;
+  clip-path:polygon(50% 0,100% 16%,68% 16%,68% 100%,32% 100%,32% 16%,0 16%);
+  transform:translate(-50%,-100%) rotate(var(--needle-angle,0deg));
+  transform-origin:50% 100%;
+  box-shadow:0 0 0 1px rgba(18,19,22,.9),0 0 8px rgba(57,255,20,.5);
+  pointer-events:none;
+  z-index:1;
+}
+.position-grid .compass-card::before {
+  content:"";
+  position:absolute;
+  left:88%;
+  top:50%;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#39ff14;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 2px #121316,0 0 7px rgba(57,255,20,.45);
+  pointer-events:none;
+  z-index:2;
+}
+.position-grid .compass-card strong {
+  position:relative;
+  z-index:3;
 }

@@ -1,7 +1,7 @@
 /* GPS Viewer v16 layout + refresh fixes */
 (function(){
   const $=id=>document.getElementById(id);
-  const API_BASE=(window.GPS_VIEWER_CONFIG&&window.GPS_VIEWER_CONFIG.apiBase)||"https://my-location-here.hrcvb7p7r5.workers.dev";
+  const API_BASE=(window.GPS_VIEWER_CONFIG&&window.GPS_VIEWER_CONFIG.apiBase)||"https://small-sky-cec5.hrcvb7p7r5.workers.dev";
   let refreshBusy=false,lastWeatherRefresh=0;
 
   function liveCoords(){

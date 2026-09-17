@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 let lastPosition=null,weatherTimer=null,addressTimer=null,lastNetworkLookup=0,gpsWatchId=null,gpsEnabled=true,dataEnabled=true,currentTab="location",latestPlaces=[];
-const API_BASE=(window.GPS_VIEWER_CONFIG&&window.GPS_VIEWER_CONFIG.apiBase)||"https://my-location-here.hrcvb7p7r5.workers.dev";
+const API_BASE=(window.GPS_VIEWER_CONFIG&&window.GPS_VIEWER_CONFIG.apiBase)||"https://small-sky-cec5.hrcvb7p7r5.workers.dev";
 const WEATHER_REFRESH_MS=10*60*1000,LOOKUP_COOLDOWN_MS=15000,MIN_MOVE_FOR_LOOKUP_M=60;
 const lastAddressKey="gpsViewer.lastAddress",lastPlaceKey="gpsViewer.lastPlace";
 function setGPSState(kind,text){const e=$("gpsStatus");e.classList.remove("warn","off","weak");if(kind)e.classList.add(kind);e.querySelector("b").textContent=text}

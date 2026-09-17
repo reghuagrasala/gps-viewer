@@ -1,1 +1,1 @@
-GPS Viewer v13 — Worker CORS/response fix, verified reverse endpoint, iPhone bottom layout fix
+GPS Viewer v14 — address proxy restored, GPS Data compass row refined
