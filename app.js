@@ -1,12 +1,8 @@
 const $=id=>document.getElementById(id);
 let lastPosition=null,weatherTimer=null,addressTimer=null,lastNetworkLookup=0,gpsWatchId=null,gpsEnabled=true,dataEnabled=true,currentTab="location",latestPlaces=[];
-let lastAddressLookupPosition=null;
-let addressQuotaBlockedUntil=0;
-const lastAddressCoordsKey="gpsViewer.lastAddressCoords";
 const API_BASE=(window.GPS_VIEWER_CONFIG&&window.GPS_VIEWER_CONFIG.apiBase)||"https://my-location-here.hrcvb7p7r5.workers.dev";
 const API_BASES=Array.from(new Set(((window.GPS_VIEWER_CONFIG&&window.GPS_VIEWER_CONFIG.apiBases)||[API_BASE,"https://small-sky-cec5.hrcvb7p7r5.workers.dev"]).filter(Boolean)));
-const WEATHER_REFRESH_MS=10*60*1000,LOOKUP_COOLDOWN_MS=120000,MIN_MOVE_FOR_LOOKUP_M=100;
-const WALK_LOOKUP_M=100,DRIVE_LOOKUP_M=300,FAST_LOOKUP_M=600;
+const WEATHER_REFRESH_MS=10*60*1000,LOOKUP_COOLDOWN_MS=15000,MIN_MOVE_FOR_LOOKUP_M=60;
 const lastAddressKey="gpsViewer.lastAddress",lastPlaceKey="gpsViewer.lastPlace";
 function setGPSState(kind,text){const e=$("gpsStatus");e.classList.remove("warn","off","weak");if(kind)e.classList.add(kind);e.querySelector("b").textContent=text}
 function setDataState(s){const e=$("dataStatus"),strong=s==="strong"||s===true,weak=s==="weak";e.classList.remove("off","weak");if(weak)e.classList.add("weak");if(!strong&&!weak)e.classList.add("off");e.querySelector("b").textContent=strong?"DATA ON":weak?"DATA WEAK":"DATA OFF";e.querySelector(".status-dot").style.background=strong?"#16ad4b":weak?"#e0a600":"#858a94"}
@@ -30,42 +26,8 @@ async function fetchPostOffice(pin){const p=String(pin||"").match(/\d{6}/)?.[0];
 function placeEmoji(t=""){t=String(t).toLowerCase();if(t.includes("hospital")||t.includes("clinic"))return "🏥";if(t.includes("school")||t.includes("university"))return "🏫";if(t.includes("park"))return "🌳";if(t.includes("hotel"))return "🏨";if(t.includes("station"))return "🚉";if(t.includes("airport"))return "✈️";if(t.includes("temple")||t.includes("church")||t.includes("mosque"))return "🏛️";return "⌖"}
 function renderPlace(d,source="LIVE"){stopBlink("addressLine2");stopBlink("addressLine3");const a=findAddress(d),p=findPrimary(d),label=String(a.label||d.label||d.displayName||"").trim();const placeLabel=String(d.currentPlace||p.name||label||"Location identified").trim();$("placeName").textContent=placeLabel;$("placeIcon").textContent=p.name?placeEmoji(p.type||p.category):"⌖";const road=String(d.road||a.road||a.street||a.streetName||"").trim(),house=String(d.houseNumber||a.houseNumber||a.house||"").trim(),district=String(d.district||a.district||"").trim(),county=String(d.county||a.county||"").trim(),city=String(d.city||a.city||d.town||a.town||"").trim(),state=String(d.state||a.state||d.stateName||a.stateName||"").trim(),pin=String(d.postalCode||a.postalCode||a.postcode||a.postal_code||"").trim();let l2=[house,road].filter(Boolean).join(" ").trim();if(!l2&&label){const f=label.split(",")[0]?.trim();if(f&&f!==placeLabel)l2=f}const locality=d.locality||d.neighbourhood||d.neighborhood||a.locality||a.neighbourhood||a.neighborhood||"";let l3=[locality,district,county,city,state].map(x=>String(x||"").trim()).filter((x,i,arr)=>x&&arr.indexOf(x)===i).join(", ");if(pin)l3=l3?`${l3} - ${pin}`:pin;$("addressLine2").textContent=l2;$("addressLine3").textContent=l3||label;const po=d.postOffice||d.postOfficeName||a.postOffice||a.postOfficeName||"";setPostOfficeDisplay(po,pin);saveLocal(lastAddressKey,{...a,road,houseNumber:house,district,county,city,state,postalCode:pin,line2:l2,line3:l3,label});saveLocal(lastPlaceKey,{primaryLocation:p,address:a,currentPlace:d.currentPlace||"",label:d.label||label});if(pin)fetchPostOffice(pin);$("footerNote").textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather"}
 function loadLastAddress(){const a=loadLocal(lastAddressKey),p=loadLocal(lastPlaceKey);if(!a)return;$("placeName").textContent=p?.currentPlace||p?.primaryLocation?.name||a.label||"Last known location";$("addressLine2").textContent=a.line2||a.street||"";$("addressLine3").textContent=a.line3||"";const pin=a.postalCode||a.postcode||"",po=loadLocal(pin?"gpsViewer.postOffice."+pin:"");setPostOfficeDisplay(po?.name||"",po?.pin||pin)}
-function utcMonthResetMs(){
-  const d=new Date();
-  return Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1,0,0,0,0);
-}
-function addressLookupDistanceM(pos){
-  if(!lastAddressLookupPosition)return Infinity;
-  return distance(lastAddressLookupPosition,pos);
-}
-function addressLookupThresholdM(){
-  const k=kmh(lastPosition?.coords?.speed);
-  if(k>=60)return FAST_LOOKUP_M;
-  if(k>=15)return DRIVE_LOOKUP_M;
-  return WALK_LOOKUP_M;
-}
-function addressLookupNeeded(pos,force=false){
-  if(force)return true;
-  if(!lastAddressLookupPosition)return true;
-  return addressLookupDistanceM(pos)>=addressLookupThresholdM();
-}
-function noteAddressQuotaBlock(){
-  addressQuotaBlockedUntil=utcMonthResetMs();
-  try{localStorage.setItem("gpsViewer.addressQuotaBlockedUntil",String(addressQuotaBlockedUntil))}catch(e){}
-}
-function restoreAddressQuotaBlock(){
-  try{const n=Number(localStorage.getItem("gpsViewer.addressQuotaBlockedUntil")||0);if(Number.isFinite(n)&&n>Date.now())addressQuotaBlockedUntil=n;else localStorage.removeItem("gpsViewer.addressQuotaBlockedUntil")}catch(e){}
-}
-function isAddressQuotaBlocked(){return addressQuotaBlockedUntil>Date.now()}
-function quotaResetText(){return new Date(addressQuotaBlockedUntil).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"})}
-async function reverseGeocode(lat,lon,force=false){
+async function reverseGeocode(lat,lon){
   if(!navigator.onLine)return false;
-  if(isAddressQuotaBlocked()){
-    $("footerNote").textContent=`Address service quota reached — retry after ${quotaResetText()}`;
-    return false;
-  }
-  const pos={coords:{latitude:lat,longitude:lon}};
-  if(!addressLookupNeeded(pos,force))return false;
   const now=Date.now();
   if(now-lastNetworkLookup<LOOKUP_COOLDOWN_MS)return false;
   lastNetworkLookup=now;
@@ -73,34 +35,18 @@ async function reverseGeocode(lat,lon,force=false){
   blink("addressLine3","Please wait…");
   setDataState("weak");
   try{
-    let j=null,quotaHit=false;
+    let j=null;
     for(const base of API_BASES){
       try{
         const u=new URL(base.replace(/\/$/,"")+"/api/reverse");
         u.searchParams.set("lat",lat);u.searchParams.set("lon",lon);u.searchParams.set("_",Date.now());
         const candidate=await fetchJSON(u,8000);
-        if(candidate?.error){
-          const msg=String(candidate.error).toLowerCase();
-          if(msg.includes("monthly here request limit")||msg.includes("request limit reached")||msg.includes("quota")){quotaHit=true;break}
-          continue;
-        }
-        if(candidate){j=candidate;break}
+        if(candidate&&!candidate.error){j=candidate;break}
       }catch(e){}
-    }
-    if(quotaHit){
-      noteAddressQuotaBlock();
-      const cached=loadLocal(lastAddressKey);
-      if(cached){renderPlace({address:cached,primaryLocation:loadLocal(lastPlaceKey)?.primaryLocation||{},currentPlace:loadLocal(lastPlaceKey)?.currentPlace||cached.label||"Last known location"},"CACHE");}
-      else{$("addressLine2").textContent="Address service limit reached";$('addressLine3').textContent="GPS and DIGIPIN continue offline";}
-      stopBlink("addressLine2");stopBlink("addressLine3");
-      setDataState("weak");
-      return false;
     }
     if(j){
       latestPlaces=Array.isArray(j.places)?j.places:(Array.isArray(j.nearbyPlaces)?j.nearbyPlaces:[]);
       renderPlace(j);
-      lastAddressLookupPosition=pos;
-      saveLocal(lastAddressCoordsKey,{lat,lon});
       await gvPut("address",lat,lon,j);
       setDataState("strong");
       return true;
@@ -109,13 +55,8 @@ async function reverseGeocode(lat,lon,force=false){
   }catch(e){
     const c=await gvGetNearby("address",lat,lon,250);
     if(c){renderPlace(c.data,"CACHE");setDataState("weak");return true}
-    const cached=loadLocal(lastAddressKey);
-    if(cached){
-      renderPlace({address:cached,primaryLocation:loadLocal(lastPlaceKey)?.primaryLocation||{},currentPlace:loadLocal(lastPlaceKey)?.currentPlace||cached.label||"Last known location"},"CACHE");
-    }else{
-      $("addressLine2").textContent="Location result not fetched";
-      $("addressLine3").textContent="Data service unavailable";
-    }
+    $("addressLine2").textContent="Location result not fetched";
+    $("addressLine3").textContent="Data service unavailable";
     stopBlink("addressLine2");stopBlink("addressLine3");setDataState("weak");
     return false;
   }
@@ -123,12 +64,12 @@ async function reverseGeocode(lat,lon,force=false){
 const weatherMap={0:["Clear sky","☀️"],1:["Mainly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Rime fog","🌫️"],51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],61:["Light rain","🌦️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],71:["Light snow","🌨️"],73:["Snow","🌨️"],75:["Heavy snow","❄️"],80:["Rain showers","🌦️"],81:["Rain showers","🌧️"],82:["Heavy showers","⛈️"],95:["Thunderstorm","⛈️"],96:["Thunderstorm + hail","⛈️"],99:["Thunderstorm + hail","⛈️"]};
 function renderWeather(c,j,source="LIVE"){const [label,icon]=weatherMap[c.weather_code]||["Unknown","☁️"];$('temperature').textContent=Math.round(c.temperature_2m??0)+"°";$('temperaturePosition').textContent=Math.round(c.temperature_2m??0)+" °C";$('humidity').textContent=c.relative_humidity_2m!=null?Math.round(c.relative_humidity_2m)+"%":"—";$('feels').textContent=Math.round(c.apparent_temperature??0)+"°";$('wind').textContent=`${Math.round(c.wind_speed_10m??0)} km/h ${compass(c.wind_direction_10m)}`;$('gusts').textContent=Math.round(c.wind_gusts_10m??0)+" km/h";$('clouds').textContent=Math.round(c.cloud_cover??0)+"%";$('visibility').textContent=Number.isFinite(Number(c.visibility))?(Number(c.visibility)/1000).toFixed(1)+" km":"—";let uv="—";if(Array.isArray(j?.hourly?.time)&&Array.isArray(j?.hourly?.uv_index)&&c.time){let best=0,min=Infinity,target=new Date(c.time).getTime();j.hourly.time.forEach((t,i)=>{const d=Math.abs(new Date(t).getTime()-target);if(d<min){min=d;best=i}});if(j.hourly.uv_index[best]!=null)uv=Math.round(j.hourly.uv_index[best])}if(c.uv_index!=null)uv=Math.round(c.uv_index);$('uv').textContent=uv;$('condition').textContent=label;$('weatherIcon').textContent=icon;stopBlink("condition");localDateTime();$('footerNote').textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather"}
 async function fetchWeather(lat,lon,force=false){if(!navigator.onLine){const c=await gvGetNearby("weather",lat,lon,1000);if(c)renderWeather(c.data.current,c.data,"CACHE");return}if(weatherTimer&&!force)return;weatherTimer=setTimeout(()=>weatherTimer=null,WEATHER_REFRESH_MS);try{let j;try{j=await fetchJSON(apiUrl("/api/weather",{lat,lon}))}catch(e){}if(!j?.current){const u=new URL("https://api.open-meteo.com/v1/forecast");u.searchParams.set("latitude",lat);u.searchParams.set("longitude",lon);u.searchParams.set("current","temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,visibility,uv_index");u.searchParams.set("hourly","uv_index,visibility");u.searchParams.set("timezone","auto");j=await fetchJSON(u)}renderWeather(j.current,j);await gvPut("weather",lat,lon,j);setDataState("strong")}catch(e){const c=await gvGetNearby("weather",lat,lon,1000);if(c)renderWeather(c.data.current,c.data,"CACHE")}}
-function updatePosition(pos){const old=lastPosition;lastPosition=pos;const c=pos.coords,lat=c.latitude,lon=c.longitude;$('lat').textContent=formatNum(lat)+"° N";$('lon').textContent=formatNum(lon)+"° E";if(Number.isFinite(c.altitude)){$('elevation').textContent=Math.round(c.altitude)+" m";saveLocal("gpsViewer.lastElevation",Math.round(c.altitude))}else{const e=loadLocal("gpsViewer.lastElevation");$('elevation').textContent=e!=null?e+" m (last known)":"Unavailable"}$('accuracy').textContent=Number.isFinite(c.accuracy)?Math.round(c.accuracy)+" m":"—";$('speed').textContent=kmh(c.speed).toFixed(1)+" km/h";$('heading').textContent=Number.isFinite(c.heading)&&c.heading>=0?Math.round(c.heading)+"° ("+compass(c.heading)+")":"—";$('movement').textContent=kmh(c.speed)>1.5?"In motion":"Stationary";setGPSState(Number.isFinite(c.accuracy)&&c.accuracy>100?"weak":"","GPS ON");try{$('digipin').textContent=formatDigiPin(getDigiPin(lat,lon))}catch(e){$('digipin').textContent="Outside India"}if(dataEnabled&&navigator.onLine){const probe={coords:{latitude:lat,longitude:lon,speed:c.speed}};if((old==null&&!lastAddressLookupPosition)||addressLookupNeeded(probe)){clearTimeout(addressTimer);addressTimer=setTimeout(()=>reverseGeocode(lat,lon),500)}fetchWeather(lat,lon)}}
+function updatePosition(pos){const old=lastPosition;lastPosition=pos;const c=pos.coords,lat=c.latitude,lon=c.longitude;$('lat').textContent=formatNum(lat)+"° N";$('lon').textContent=formatNum(lon)+"° E";if(Number.isFinite(c.altitude)){$('elevation').textContent=Math.round(c.altitude)+" m";saveLocal("gpsViewer.lastElevation",Math.round(c.altitude))}else{const e=loadLocal("gpsViewer.lastElevation");$('elevation').textContent=e!=null?e+" m (last known)":"Unavailable"}$('accuracy').textContent=Number.isFinite(c.accuracy)?Math.round(c.accuracy)+" m":"—";$('speed').textContent=kmh(c.speed).toFixed(1)+" km/h";$('heading').textContent=Number.isFinite(c.heading)&&c.heading>=0?Math.round(c.heading)+"° ("+compass(c.heading)+")":"—";$('movement').textContent=kmh(c.speed)>1.5?"In motion":"Stationary";setGPSState(Number.isFinite(c.accuracy)&&c.accuracy>100?"weak":"","GPS ON");try{$('digipin').textContent=formatDigiPin(getDigiPin(lat,lon))}catch(e){$('digipin').textContent="Outside India"}if(dataEnabled&&navigator.onLine&&(old==null||distance(old,pos)>=MIN_MOVE_FOR_LOOKUP_M)){clearTimeout(addressTimer);addressTimer=setTimeout(()=>reverseGeocode(lat,lon),500);fetchWeather(lat,lon)}}
 function gpsError(e){setGPSState(e?.code===1?"off":"weak",e?.code===1?"GPS DENIED — allow Location":"GPS waiting…");$('footerNote').textContent=e?.code===1?"Allow Location for this site":"Waiting for GPS location"}
 function startGPS(){if(!navigator.geolocation){setGPSState("off","GPS UNAVAILABLE");return}if(gpsWatchId!==null)navigator.geolocation.clearWatch(gpsWatchId);gpsEnabled=true;setGPSState("","GPS ON");navigator.geolocation.getCurrentPosition(updatePosition,gpsError,{enableHighAccuracy:true,maximumAge:0,timeout:15000});gpsWatchId=navigator.geolocation.watchPosition(updatePosition,gpsError,{enableHighAccuracy:true,maximumAge:2000,timeout:20000})}
 function stopGPS(){if(gpsWatchId!==null)navigator.geolocation.clearWatch(gpsWatchId);gpsWatchId=null;gpsEnabled=false;setGPSState("off","GPS OFF")}
 function toggleGPS(){gpsEnabled?stopGPS():startGPS()}
-function toggleData(){dataEnabled=!dataEnabled;setDataState(dataEnabled&&navigator.onLine?"weak":"off");if(dataEnabled&&lastPosition&&navigator.onLine){reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude,true);fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true)}}
+function toggleData(){dataEnabled=!dataEnabled;setDataState(dataEnabled&&navigator.onLine?"weak":"off");if(dataEnabled&&lastPosition&&navigator.onLine){reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true)}}
 const PLACE_CATEGORIES=["Accounting","Airport","Amusement park","Aquarium","Art gallery","ATM","Bakery","Bank","Bar","Beauty salon","Bicycle store","Book store","Bowling alley","Bus station","Cafe","Campground","Car dealer","Car rental","Car repair","Car wash","Cemetery","Church","City hall","Clothing store","Convenience store","Dentist","Department store","Doctor","Drugstore","Electrician","Electronics store","Fire station","Florist","Furniture store","Gas station","Gym","Hair care","Hardware store","Hindu temple","Hospital","Insurance agency","Jewelry store","Laundry","Lawyer","Library","Local government office","Locksmith","Lodging","Meal delivery","Meal takeaway","Mosque","Movie theater","Museum","Park","Parking","Pet store","Pharmacy","Physiotherapist","Plumber","Police","Post office","Primary school","Real estate agency","Restaurant","School","Shoe store","Shopping mall","Spa","Stadium","Store","Supermarket","Taxi stand","Train station","Travel agency","University","Veterinary care","Zoo"];
 function rememberPlaces(q){try{sessionStorage.setItem("gpsViewer.returnTab","places");sessionStorage.setItem("gpsViewer.returnQuery",q||"")}catch(e){}}
 function restorePlaces(){let t="",q="";try{t=sessionStorage.getItem("gpsViewer.returnTab")||"";q=sessionStorage.getItem("gpsViewer.returnQuery")||""}catch(e){}if(t!=="places")return;try{sessionStorage.removeItem("gpsViewer.returnTab");sessionStorage.removeItem("gpsViewer.returnQuery")}catch(e){}showTab("places");if(q&&$("placeSearchInput")){$("placeSearchInput").value=q;renderPlaceCategories(q)}}
@@ -139,5 +80,5 @@ function placeListHTML(places){return '<div class="place-list large">'+places.sl
 function showTab(tab){currentTab=tab;if(tab==="location"){closeFullScreen();return}const v=$("fullScreenView"),c=$("fullScreenContent");v.hidden=false;if(tab==="map"){const lat=lastPosition?.coords.latitude,lon=lastPosition?.coords.longitude;if(lat==null){c.innerHTML='<h2>MAP</h2><p>Waiting for GPS location…</p>';return}const bbox=`${lon-.008},${lat-.006},${lon+.008},${lat+.006}`;c.innerHTML=`<div class="map-title"><h2>MAP</h2><span class="map-current">Current GPS position</span></div><iframe class="fullscreen-map" title="OpenStreetMap" src="https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${lat}%2C${lon}"></iframe><div class="map-actions"><a target="_blank" rel="noopener" href="https://mappls.com/@${lat.toFixed(6)},${lon.toFixed(6)}">Mappls</a><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${lat},${lon}">Google Maps</a><a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}">OpenStreetMap</a></div>`}else renderPlacesScreen(c);if(tab==="places")c.querySelectorAll(".place-open-map").forEach(b=>b.onclick=()=>openNearbySearch(b.dataset.q))}
 function closeFullScreen(){$("fullScreenView").hidden=true;currentTab="location";document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab==="location"))}
 $("gpsStatus").onclick=toggleGPS;$("dataStatus").onclick=toggleData;document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");showTab(b.dataset.tab)});$("fullScreenBack").onclick=closeFullScreen;
-window.addEventListener("pageshow",restorePlaces);window.addEventListener("focus",restorePlaces);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")restorePlaces()});window.addEventListener("online",()=>{setDataState("strong");if(lastPosition){reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude,false);fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true)}});window.addEventListener("offline",()=>{setDataState("off");$("footerNote").textContent="Offline: GPS + DIGIPIN + cached results"});
-setTimezone();localDateTime();restoreAddressQuotaBlock();loadLastAddress();const savedAddressCoords=loadLocal(lastAddressCoordsKey);if(savedAddressCoords&&Number.isFinite(savedAddressCoords.lat)&&Number.isFinite(savedAddressCoords.lon))lastAddressLookupPosition={coords:{latitude:savedAddressCoords.lat,longitude:savedAddressCoords.lon}};setDataState(dataEnabled&&navigator.onLine?"strong":"off");startGPS();restorePlaces();setInterval(localDateTime,1000);if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+window.addEventListener("pageshow",restorePlaces);window.addEventListener("focus",restorePlaces);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")restorePlaces()});window.addEventListener("online",()=>{setDataState("strong");if(lastPosition){reverseGeocode(lastPosition.coords.latitude,lastPosition.coords.longitude);fetchWeather(lastPosition.coords.latitude,lastPosition.coords.longitude,true)}});window.addEventListener("offline",()=>{setDataState("off");$("footerNote").textContent="Offline: GPS + DIGIPIN + cached results"});
+setTimezone();localDateTime();loadLastAddress();setDataState(dataEnabled&&navigator.onLine?"strong":"off");startGPS();restorePlaces();setInterval(localDateTime,1000);if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));

@@ -1,1 +1,1 @@
-GPS Viewer v16 — quota-safe reverse geocoding: adaptive movement threshold, 2-minute cooldown, and monthly HERE quota lockout with cached-address preservation
+GPS Viewer v15 — reverse-geocoding endpoint fallback restored; compass needle repositioned
