@@ -69,7 +69,7 @@ async function reverseGeocodeMapbox(lat,lon){
   }catch(e){return null}
 }
 
-function reverseGeocode(lat,lon){
+async function reverseGeocode(lat,lon){
   if(!navigator.onLine)return false;
   const now=Date.now();
   if(now-lastNetworkLookup<LOOKUP_COOLDOWN_MS)return false;
