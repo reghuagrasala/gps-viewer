@@ -3,8 +3,8 @@
    Mapbox uses a PUBLIC browser token (pk...). Restrict it to this GitHub Pages URL in Mapbox.
 */
 const MAPBOX_PUBLIC_TOKEN =
-  "pk.eyJ1IjoicmVnaHVhLWFncmFzYWxhIiwiYSI6ImNtdTlqaTR3YzExc2syeHNiODdybWpvazEifQ." +
-  "QvxbqX2jLykuo3PuqpgBHw";
+  "pk.eyJ1IjoicmVnaHVhLWFncmFzYWxhIiwiYSI6ImNtdTlrNGE0OTExejMydnNjZ2h0NDZuenoifQ." +
+  "Outat1OJ0XjSZTQIGKyPLA";
 
 window.GPS_VIEWER_CONFIG = {
   apiBase: "https://my-location-here.hrcvb7p7r5.workers.dev",
