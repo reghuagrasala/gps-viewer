@@ -26,7 +26,50 @@ async function fetchPostOffice(pin){const p=String(pin||"").match(/\d{6}/)?.[0];
 function placeEmoji(t=""){t=String(t).toLowerCase();if(t.includes("hospital")||t.includes("clinic"))return "🏥";if(t.includes("school")||t.includes("university"))return "🏫";if(t.includes("park"))return "🌳";if(t.includes("hotel"))return "🏨";if(t.includes("station"))return "🚉";if(t.includes("airport"))return "✈️";if(t.includes("temple")||t.includes("church")||t.includes("mosque"))return "🏛️";return "⌖"}
 function renderPlace(d,source="LIVE"){stopBlink("addressLine2");stopBlink("addressLine3");const a=findAddress(d),p=findPrimary(d),label=String(a.label||d.label||d.displayName||"").trim();const placeLabel=String(d.currentPlace||p.name||label||"Location identified").trim();$("placeName").textContent=placeLabel;$("placeIcon").textContent=p.name?placeEmoji(p.type||p.category):"⌖";const road=String(d.road||a.road||a.street||a.streetName||"").trim(),house=String(d.houseNumber||a.houseNumber||a.house||"").trim(),district=String(d.district||a.district||"").trim(),county=String(d.county||a.county||"").trim(),city=String(d.city||a.city||d.town||a.town||"").trim(),state=String(d.state||a.state||d.stateName||a.stateName||"").trim(),pin=String(d.postalCode||a.postalCode||a.postcode||a.postal_code||"").trim();let l2=[house,road].filter(Boolean).join(" ").trim();if(!l2&&label){const f=label.split(",")[0]?.trim();if(f&&f!==placeLabel)l2=f}const locality=d.locality||d.neighbourhood||d.neighborhood||a.locality||a.neighbourhood||a.neighborhood||"";let l3=[locality,district,county,city,state].map(x=>String(x||"").trim()).filter((x,i,arr)=>x&&arr.indexOf(x)===i).join(", ");if(pin)l3=l3?`${l3} - ${pin}`:pin;$("addressLine2").textContent=l2;$("addressLine3").textContent=l3||label;const po=d.postOffice||d.postOfficeName||a.postOffice||a.postOfficeName||"";setPostOfficeDisplay(po,pin);saveLocal(lastAddressKey,{...a,road,houseNumber:house,district,county,city,state,postalCode:pin,line2:l2,line3:l3,label});saveLocal(lastPlaceKey,{primaryLocation:p,address:a,currentPlace:d.currentPlace||"",label:d.label||label});if(pin)fetchPostOffice(pin);$("footerNote").textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather"}
 function loadLastAddress(){const a=loadLocal(lastAddressKey),p=loadLocal(lastPlaceKey);if(!a)return;$("placeName").textContent=p?.currentPlace||p?.primaryLocation?.name||a.label||"Last known location";$("addressLine2").textContent=a.line2||a.street||"";$("addressLine3").textContent=a.line3||"";const pin=a.postalCode||a.postcode||"",po=loadLocal(pin?"gpsViewer.postOffice."+pin:"");setPostOfficeDisplay(po?.name||"",po?.pin||pin)}
-async function reverseGeocode(lat,lon){
+async async function reverseGeocodeMapbox(lat,lon){
+  const token=String(window.GPS_VIEWER_CONFIG?.mapboxAccessToken||"").trim();
+  if(!token||!navigator.onLine)return null;
+  try{
+    const u=new URL("https://api.mapbox.com/search/geocode/v6/reverse");
+    u.searchParams.set("longitude",lon);
+    u.searchParams.set("latitude",lat);
+    u.searchParams.set("country","IN");
+    u.searchParams.set("language","en");
+    u.searchParams.set("types","address,street,place,locality,neighborhood,district,postcode");
+    u.searchParams.set("access_token",token);
+    const j=await fetchJSON(u,10000);
+    const f=Array.isArray(j?.features)?j.features.find(x=>x?.properties?.full_address||x?.properties?.place_formatted||x?.place_name):null;
+    if(!f)return null;
+    const p=f.properties||{},ctx=p.context||{};
+    const get=(...keys)=>{for(const k of keys){const v=ctx?.[k]?.name??ctx?.[k]?.text??ctx?.[k];if(v)return String(v)}return ""};
+    const addressNumber=p.address_number||p.context?.address?.address_number||"";
+    const street=p.street||p.context?.street?.name||"";
+    const place=p.place_formatted||"";
+    const city=get("place","locality","district");
+    const district=get("district");
+    const state=get("region");
+    const pin=get("postcode");
+    const country=get("country")||"India";
+    const locality=get("locality","neighborhood");
+    const label=p.full_address||f.place_name||place||[street,city,state].filter(Boolean).join(", ");
+    return {
+      address:{label,address_number:addressNumber,houseNumber:addressNumber,road:street,street,city,district,state,postalCode:pin,locality,neighborhood:locality,country},
+      label,
+      houseNumber:addressNumber,
+      road:street,
+      city,
+      district,
+      state,
+      postalCode:pin,
+      locality,
+      country,
+      currentPlace:city||locality||p.name||label,
+      source:"MAPBOX"
+    };
+  }catch(e){return null}
+}
+
+function reverseGeocode(lat,lon){
   if(!navigator.onLine)return false;
   const now=Date.now();
   if(now-lastNetworkLookup<LOOKUP_COOLDOWN_MS)return false;
@@ -53,6 +96,16 @@ async function reverseGeocode(lat,lon){
     }
     throw Error("Location unavailable");
   }catch(e){
+    // HERE is the primary geocoder. If the Worker/HERE service fails (including
+    // integration/rate-limit errors), use Mapbox directly from the browser.
+    const mb=await reverseGeocodeMapbox(lat,lon);
+    if(mb){
+      latestPlaces=[];
+      renderPlace(mb,"MAPBOX");
+      await gvPut("address",lat,lon,mb);
+      setDataState("strong");
+      return true;
+    }
     const c=await gvGetNearby("address",lat,lon,250);
     if(c){renderPlace(c.data,"CACHE");setDataState("weak");return true}
     $("addressLine2").textContent="Location result not fetched";
