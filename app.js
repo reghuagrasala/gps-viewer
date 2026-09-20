@@ -35,7 +35,7 @@ async function reverseGeocodeMapbox(lat,lon){
     u.searchParams.set("latitude",lat);
     u.searchParams.set("country","IN");
     u.searchParams.set("language","en");
-    u.searchParams.set("types","address,street,place,locality,neighborhood,district,postcode");
+    u.searchParams.set("worldview","in");
     u.searchParams.set("access_token",token);
     const j=await fetchJSON(u,10000);
     const f=Array.isArray(j?.features)?j.features.find(x=>x?.properties?.full_address||x?.properties?.place_formatted||x?.place_name):null;
@@ -43,7 +43,7 @@ async function reverseGeocodeMapbox(lat,lon){
     const p=f.properties||{},ctx=p.context||{};
     const get=(...keys)=>{for(const k of keys){const v=ctx?.[k]?.name??ctx?.[k]?.text??ctx?.[k];if(v)return String(v)}return ""};
     const addressNumber=p.address_number||p.context?.address?.address_number||"";
-    const street=p.street||p.context?.street?.name||"";
+    const street=p.street||p.context?.street?.name||((p.feature_type==="street")?p.name:"");
     const place=p.place_formatted||"";
     const city=get("place","locality","district");
     const district=get("district");
