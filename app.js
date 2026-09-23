@@ -24,7 +24,35 @@ function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;",
 function setPostOfficeDisplay(name,pin=""){const e=$("postOffice");if(!e)return;const n=String(name||"").replace(/\s*\(?\d{6}\)?\s*$/g,"").trim(),p6=String(pin||"").match(/\d{6}/)?.[0]||String(name||"").match(/\d{6}/)?.[0]||"";if(!n){e.textContent=p6?`PIN ${p6}`:"—";return}e.innerHTML=`<span class="po-pin">${p6}</span><span class="po-name">${escapeHTML(n)}</span>`;e.title=p6?`${p6} ${n}`:n}
 async function fetchPostOffice(pin){const p=String(pin||"").match(/\d{6}/)?.[0];if(!p)return;const k="gpsViewer.postOffice."+p,cached=loadLocal(k);if(cached?.name){setPostOfficeDisplay(cached.name,cached.pin||p);return}setPostOfficeDisplay("Finding post office…",p);if(!navigator.onLine||!dataEnabled)return;try{const j=await fetchJSON(`https://api.postalpincode.in/pincode/${p}`,10000),rows=Array.isArray(j)&&Array.isArray(j[0]?.PostOffice)?j[0].PostOffice:[];const x=rows.find(v=>String(v?.BranchType||"").toLowerCase().includes("sub office"))||rows[0];if(x?.Name){setPostOfficeDisplay(x.Name,p);saveLocal(k,{name:x.Name,pin:p})}else setPostOfficeDisplay("Not available",p)}catch(e){setPostOfficeDisplay("Not available",p)}}
 function placeEmoji(t=""){t=String(t).toLowerCase();if(t.includes("hospital")||t.includes("clinic"))return "🏥";if(t.includes("school")||t.includes("university"))return "🏫";if(t.includes("park"))return "🌳";if(t.includes("hotel"))return "🏨";if(t.includes("station"))return "🚉";if(t.includes("airport"))return "✈️";if(t.includes("temple")||t.includes("church")||t.includes("mosque"))return "🏛️";return "⌖"}
-function renderPlace(d,source="LIVE"){stopBlink("addressLine2");stopBlink("addressLine3");const a=findAddress(d),p=findPrimary(d),label=String(a.label||d.label||d.displayName||"").trim();const placeLabel=String(d.currentPlace||p.name||label||"Location identified").trim();$("placeName").textContent=placeLabel;$("placeIcon").textContent=p.name?placeEmoji(p.type||p.category):"⌖";const road=String(d.road||a.road||a.street||a.streetName||"").trim(),house=String(d.houseNumber||a.houseNumber||a.house||"").trim(),district=String(d.district||a.district||"").trim(),county=String(d.county||a.county||"").trim(),city=String(d.city||a.city||d.town||a.town||"").trim(),state=String(d.state||a.state||d.stateName||a.stateName||"").trim(),pin=String(d.postalCode||a.postalCode||a.postcode||a.postal_code||"").trim();let l2=[house,road].filter(Boolean).join(" ").trim();if(!l2&&label){const f=label.split(",")[0]?.trim();if(f&&f!==placeLabel)l2=f}const locality=d.locality||d.neighbourhood||d.neighborhood||a.locality||a.neighbourhood||a.neighborhood||"";let l3=[locality,district,county,city,state].map(x=>String(x||"").trim()).filter((x,i,arr)=>x&&arr.indexOf(x)===i).join(", ");if(pin)l3=l3?`${l3} - ${pin}`:pin;$("addressLine2").textContent=l2;$("addressLine3").textContent=l3||label;const po=d.postOffice||d.postOfficeName||a.postOffice||a.postOfficeName||"";setPostOfficeDisplay(po,pin);saveLocal(lastAddressKey,{...a,road,houseNumber:house,district,county,city,state,postalCode:pin,line2:l2,line3:l3,label});saveLocal(lastPlaceKey,{primaryLocation:p,address:a,currentPlace:d.currentPlace||"",label:d.label||label});if(pin)fetchPostOffice(pin);$("footerNote").textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather"}
+function renderPlace(d,source="LIVE"){
+  stopBlink("addressLine2");stopBlink("addressLine3");
+  const a=findAddress(d),p=findPrimary(d),nested=d?.location?.address||d?.result?.address||d?.reverse?.address||{};
+  const label=String(a.label||d.label||d.displayName||d.display_name||"").trim();
+  const pick=(...xs)=>xs.map(x=>String(x??"").trim()).find(Boolean)||"";
+  const road=pick(d.road,d.street,d.streetName,d.roadName,d.route,d?.address?.road,d?.address?.street,d?.address?.streetName,d?.address?.roadName,a.road,a.street,a.streetName,a.roadName,a.route,nested.road,nested.street,nested.streetName,nested.roadName);
+  const house=pick(d.houseNumber,d.addressNumber,d.house,d?.address?.houseNumber,d?.address?.address_number,a.houseNumber,a.address_number,a.house,a.house_number,nested.houseNumber,nested.address_number);
+  const district=pick(d.district,a.district,nested.district),county=pick(d.county,a.county,nested.county);
+  const city=pick(d.city,d.town,d.place,a.city,a.town,a.place,nested.city,nested.town,nested.place);
+  const state=pick(d.state,d.stateName,a.state,a.stateName,nested.state,nested.stateName);
+  let pin=pick(d.postalCode,d.postcode,d.postal_code,a.postalCode,a.postcode,a.postal_code,nested.postalCode,nested.postcode);
+  if(!pin){const m=label.match(/\b\d{6}\b/);if(m)pin=m[0]}
+  const locality=pick(d.locality,d.neighbourhood,d.neighborhood,a.locality,a.neighbourhood,a.neighborhood,nested.locality,nested.neighbourhood,nested.neighborhood);
+  const placeLabel=String(d.currentPlace||p.name||city||locality||label||"Location identified").trim();
+  $("placeName").textContent=placeLabel;
+  $("placeIcon").textContent=p.name?placeEmoji(p.type||p.category):"⌖";
+  let l2=[house,road].filter(Boolean).join(" ").trim();
+  if(!l2&&label){const first=label.split(",")[0]?.trim();if(first&&first!==placeLabel)l2=first}
+  let l3=[locality,district,county,city,state].map(x=>String(x||"").trim()).filter((x,i,arr)=>x&&arr.indexOf(x)===i).join(", ");
+  if(pin)l3=l3?l3+" - "+pin:pin;
+  $("addressLine2").textContent=l2;
+  $("addressLine3").textContent=l3||label;
+  const po=pick(d.postOffice,d.postOfficeName,d.post_office,d.postOffice?.name,a.postOffice,a.postOfficeName,a.post_office,nested.postOffice,nested.postOfficeName);
+  setPostOfficeDisplay(po,pin);
+  saveLocal(lastAddressKey,{...a,road,houseNumber:house,district,county,city,state,postalCode:pin,line2:l2,line3:l3,label});
+  saveLocal(lastPlaceKey,{primaryLocation:p,address:a,currentPlace:d.currentPlace||"",label:d.label||label});
+  if(pin)fetchPostOffice(pin);
+  $("footerNote").textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather";
+}
 function loadLastAddress(){const a=loadLocal(lastAddressKey),p=loadLocal(lastPlaceKey);if(!a)return;$("placeName").textContent=p?.currentPlace||p?.primaryLocation?.name||a.label||"Last known location";$("addressLine2").textContent=a.line2||a.street||"";$("addressLine3").textContent=a.line3||"";const pin=a.postalCode||a.postcode||"",po=loadLocal(pin?"gpsViewer.postOffice."+pin:"");setPostOfficeDisplay(po?.name||"",po?.pin||pin)}
 async function reverseGeocodeMapbox(lat,lon){
   const token=String(window.GPS_VIEWER_CONFIG?.mapboxAccessToken||"").trim();
