@@ -16,3 +16,12 @@
     background: var(--bg) !important;
   }
 }
+
+
+/* Tap-to-expand Current Location */
+.address-card{cursor:pointer;}
+.address-card.address-expanded{height:auto;min-height:120px;}
+.address-card.address-expanded .address-content{overflow:visible;}
+.address-card.address-expanded .place-name,
+.address-card.address-expanded .address-line{white-space:normal;overflow:visible;text-overflow:clip;}
+.address-card.address-expanded .hidden-address{display:block !important;}
