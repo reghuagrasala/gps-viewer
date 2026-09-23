@@ -30,6 +30,21 @@ async function fetchPostOffice(pin){const p=String(pin||"").match(/\d{6}/)?.[0];
 function placeEmoji(t=""){t=String(t).toLowerCase();if(t.includes("hospital")||t.includes("clinic"))return "🏥";if(t.includes("school")||t.includes("university"))return "🏫";if(t.includes("park"))return "🌳";if(t.includes("hotel"))return "🏨";if(t.includes("station"))return "🚉";if(t.includes("airport"))return "✈️";if(t.includes("temple")||t.includes("church")||t.includes("mosque"))return "🏛️";return "⌖"}
 function renderPlace(d,source="LIVE"){stopBlink("addressLine2");stopBlink("addressLine3");const a=findAddress(d),p=findPrimary(d),label=String(a.label||d.label||d.displayName||"").trim();const placeLabel=String(d.currentPlace||p.name||label||"Location identified").trim();$("placeName").textContent=placeLabel;$("placeIcon").textContent=p.name?placeEmoji(p.type||p.category):"⌖";const road=String(d.road||a.road||a.street||a.streetName||"").trim(),house=String(d.houseNumber||a.houseNumber||a.house||"").trim(),district=String(d.district||a.district||"").trim(),county=String(d.county||a.county||"").trim(),city=String(d.city||a.city||d.town||a.town||"").trim(),state=String(d.state||a.state||d.stateName||a.stateName||"").trim(),pin=String(d.postalCode||a.postalCode||a.postcode||a.postal_code||"").trim();let l2=[house,road].filter(Boolean).join(" ").trim();if(!l2&&label){const f=label.split(",")[0]?.trim();if(f&&f!==placeLabel)l2=f}const locality=d.locality||d.neighbourhood||d.neighborhood||a.locality||a.neighbourhood||a.neighborhood||"";let l3=[locality,district,county,city,state].map(x=>String(x||"").trim()).filter((x,i,arr)=>x&&arr.indexOf(x)===i).join(", ");if(pin)l3=l3?`${l3} - ${pin}`:pin;$("addressLine2").textContent=l2;$("addressLine3").textContent=l3||label;const po=d.postOffice||d.postOfficeName||a.postOffice||a.postOfficeName||"";setPostOfficeDisplay(po,pin);saveLocal(lastAddressKey,{...a,road,houseNumber:house,district,county,city,state,postalCode:pin,line2:l2,line3:l3,label});saveLocal(lastPlaceKey,{primaryLocation:p,address:a,currentPlace:d.currentPlace||"",label:d.label||label});if(pin)fetchPostOffice(pin);$("footerNote").textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather"}
 function loadLastAddress(){const a=loadLocal(lastAddressKey),p=loadLocal(lastPlaceKey);if(!a)return;$("placeName").textContent=p?.currentPlace||p?.primaryLocation?.name||a.label||"Last known location";$("addressLine2").textContent=a.line2||a.street||"";$("addressLine3").textContent=a.line3||"";const pin=a.postalCode||a.postcode||"",po=loadLocal(pin?"gpsViewer.postOffice."+pin:"");setPostOfficeDisplay(po?.name||"",po?.pin||pin)}
+const HERE_MONTHLY_LIMIT=1000;
+const hereUsageKey="gpsViewer.hereUsage";
+function monthKey(){const d=new Date();return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")}
+function getHereUsage(){
+  const m=monthKey(),x=loadLocal(hereUsageKey);
+  if(!x||x.month!==m)return {month:m,count:0};
+  return {month:m,count:Math.max(0,Number(x.count)||0)};
+}
+function noteHereUsage(){
+  const x=getHereUsage();
+  x.count=Math.min(HERE_MONTHLY_LIMIT,x.count+1);
+  saveLocal(hereUsageKey,x);
+  return x;
+}
+function hereLimitReached(){return getHereUsage().count>=HERE_MONTHLY_LIMIT}
 function utcMonthResetMs(){
   const d=new Date();
   return Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1,0,0,0,0);
@@ -120,7 +135,13 @@ async function reverseGeocode(lat,lon,force=false){
   let hereSucceeded=false;
   try{
     let j=null,quotaHit=false;
+    // Use HERE for the first 1,000 successful reverse-geocoding requests
+    // in the current UTC month. After that, go straight to Mapbox.
+    if(hereLimitReached()){
+      quotaHit=true;
+    }
     for(const base of API_BASES){
+      if(quotaHit)break;
       try{
         const u=new URL(base.replace(/\/$/,"")+"/api/reverse");
         u.searchParams.set("lat",lat);u.searchParams.set("lon",lon);u.searchParams.set("_",Date.now());
@@ -130,7 +151,7 @@ async function reverseGeocode(lat,lon,force=false){
           if(msg.includes("monthly here request limit")||msg.includes("request limit reached")||msg.includes("quota")){quotaHit=true;break}
           continue;
         }
-        if(candidate){j=candidate;break}
+        if(candidate){j=candidate;noteHereUsage();break}
       }catch(e){}
     }
     if(quotaHit){
