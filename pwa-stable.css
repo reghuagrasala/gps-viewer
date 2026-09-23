@@ -1,0 +1,73 @@
+/* GPS Viewer — stable iPhone/PWA layout
+   Single dashboard only. No horizontal scrolling or pinch zoom. */
+html,body{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+  touch-action:pan-y;
+  -webkit-text-size-adjust:100%;
+}
+body{
+  background:#121212!important;
+  position:fixed;
+  inset:0;
+  height:100dvh;
+}
+.app{
+  width:100%!important;
+  max-width:760px!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  margin:0 auto!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+.address-card,
+.position-grid,
+.weather-grid,
+.weather-main,
+.section-title,
+.status-row,
+.digipin-bar{
+  min-width:0!important;
+  max-width:100%!important;
+}
+.three-col{
+  width:100%!important;
+  min-width:0!important;
+}
+.position-row.equal-row{
+  width:100%!important;
+  min-width:0!important;
+}
+.metric{
+  min-width:0!important;
+}
+.metric-label,.metric strong,.condition{
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+}
+.fullscreen-view,
+.tabs,
+.legacy-state{
+  display:none!important;
+}
+@media (display-mode:standalone){
+  html,body{
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+  }
+  .app{
+    height:100dvh!important;
+    min-height:100dvh!important;
+    padding-top:max(5px,env(safe-area-inset-top))!important;
+    padding-bottom:max(5px,env(safe-area-inset-bottom))!important;
+  }
+}
+@supports (-webkit-touch-callout:none){
+  input,button,a{touch-action:manipulation}
+}
