@@ -25,3 +25,8 @@
 .address-card.address-expanded .place-name,
 .address-card.address-expanded .address-line{white-space:normal;overflow:visible;text-overflow:clip;}
 .address-card.address-expanded .hidden-address{display:block !important;}
+
+
+/* Small fade hint for tap-to-expand */
+.address-card::after{content:"Tap to expand";position:absolute;right:12px;bottom:7px;font-size:10px;line-height:1;color:var(--text-secondary);opacity:.55;pointer-events:none;transition:opacity .2s ease;}
+.address-card.address-expanded::after{opacity:0;}
