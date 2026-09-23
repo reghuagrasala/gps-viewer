@@ -58,6 +58,51 @@ function restoreAddressQuotaBlock(){
 }
 function isAddressQuotaBlocked(){return addressQuotaBlockedUntil>Date.now()}
 function quotaResetText(){return new Date(addressQuotaBlockedUntil).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:true,timeZone:"Asia/Kolkata"})}
+async function reverseGeocodeMapbox(lat,lon){
+  const token=String(window.GPS_VIEWER_CONFIG?.mapboxAccessToken||"").trim();
+  if(!token||!navigator.onLine)return null;
+  try{
+    const u=new URL("https://api.mapbox.com/search/geocode/v6/reverse");
+    u.searchParams.set("longitude",String(lon));
+    u.searchParams.set("latitude",String(lat));
+    u.searchParams.set("country","IN");
+    u.searchParams.set("language","en");
+    u.searchParams.set("worldview","in");
+    u.searchParams.set("access_token",token);
+    const r=await fetch(u,{cache:"no-store",headers:{Accept:"application/json"}});
+    let j=null;
+    try{j=await r.json()}catch(e){}
+    if(!r.ok){
+      console.warn("Mapbox reverse geocode HTTP "+r.status,j?.message||"");
+      return null;
+    }
+    const features=Array.isArray(j?.features)?j.features:[];
+    if(!features.length)return null;
+    const f=features[0],p=f?.properties||{},ctx=p.context||{};
+    const val=(x)=>String(x?.name??x?.text??x??"").trim();
+    const context=(...keys)=>{for(const k of keys){const v=val(ctx[k]);if(v)return v}return ""};
+    const addressCtx=p.context?.address||{};
+    const addressNumber=val(p.address_number)||val(addressCtx.address_number);
+    const street=val(p.street)||val(addressCtx.street_name)||val(ctx.street?.name);
+    const locality=context("locality","neighborhood");
+    const district=context("district");
+    const city=context("place");
+    const state=context("region");
+    const pin=context("postcode");
+    const country=context("country")||"India";
+    const label=val(p.full_address)||val(p.place_formatted)||val(p.name)||val(f.place_name)||[street,city,state,pin].filter(Boolean).join(", ");
+    if(!label)return null;
+    return {
+      address:{label,address_number:addressNumber,houseNumber:addressNumber,road:street,street,city,district,state,postalCode:pin,locality,neighborhood:locality,country},
+      label,houseNumber:addressNumber,road:street,city,district,state,postalCode:pin,locality,country,
+      currentPlace:city||locality||p.name||label,source:"MAPBOX"
+    };
+  }catch(e){
+    console.warn("Mapbox reverse geocode failed",e);
+    return null;
+  }
+}
+
 async function reverseGeocode(lat,lon,force=false){
   if(!navigator.onLine)return false;
   if(isAddressQuotaBlocked()){
@@ -72,6 +117,7 @@ async function reverseGeocode(lat,lon,force=false){
   blink("addressLine2","Fetching location…");
   blink("addressLine3","Please wait…");
   setDataState("weak");
+  let hereSucceeded=false;
   try{
     let j=null,quotaHit=false;
     for(const base of API_BASES){
@@ -89,14 +135,7 @@ async function reverseGeocode(lat,lon,force=false){
     }
     if(quotaHit){
       noteAddressQuotaBlock();
-      const cached=loadLocal(lastAddressKey);
-      if(cached){renderPlace({address:cached,primaryLocation:loadLocal(lastPlaceKey)?.primaryLocation||{},currentPlace:loadLocal(lastPlaceKey)?.currentPlace||cached.label||"Last known location"},"CACHE");}
-      else{$("addressLine2").textContent="Address service limit reached";$('addressLine3').textContent="GPS and DIGIPIN continue offline";}
-      stopBlink("addressLine2");stopBlink("addressLine3");
-      setDataState("weak");
-      return false;
-    }
-    if(j){
+    }else if(j){
       latestPlaces=Array.isArray(j.places)?j.places:(Array.isArray(j.nearbyPlaces)?j.nearbyPlaces:[]);
       renderPlace(j);
       lastAddressLookupPosition=pos;
@@ -105,20 +144,33 @@ async function reverseGeocode(lat,lon,force=false){
       setDataState("strong");
       return true;
     }
-    throw Error("Location unavailable");
-  }catch(e){
-    const c=await gvGetNearby("address",lat,lon,250);
-    if(c){renderPlace(c.data,"CACHE");setDataState("weak");return true}
-    const cached=loadLocal(lastAddressKey);
-    if(cached){
-      renderPlace({address:cached,primaryLocation:loadLocal(lastPlaceKey)?.primaryLocation||{},currentPlace:loadLocal(lastPlaceKey)?.currentPlace||cached.label||"Last known location"},"CACHE");
-    }else{
-      $("addressLine2").textContent="Location result not fetched";
-      $("addressLine3").textContent="Data service unavailable";
-    }
-    stopBlink("addressLine2");stopBlink("addressLine3");setDataState("weak");
-    return false;
+  }catch(e){}
+  // HERE/Worker failed or reached its limit: try the public Mapbox browser fallback.
+  const mb=await reverseGeocodeMapbox(lat,lon);
+  if(mb){
+    latestPlaces=[];
+    renderPlace(mb,"MAPBOX");
+    lastAddressLookupPosition=pos;
+    saveLocal(lastAddressCoordsKey,{lat,lon});
+    await gvPut("address",lat,lon,mb);
+    setDataState("strong");
+    return true;
   }
+  const c=await gvGetNearby("address",lat,lon,250);
+  if(c){
+    renderPlace(c.data,"CACHE");
+    setDataState("weak");
+    return true;
+  }
+  const cached=loadLocal(lastAddressKey);
+  if(cached){
+    renderPlace({address:cached,primaryLocation:loadLocal(lastPlaceKey)?.primaryLocation||{},currentPlace:loadLocal(lastPlaceKey)?.currentPlace||cached.label||"Last known location"},"CACHE");
+  }else{
+    $("addressLine2").textContent="Location result not fetched";
+    $("addressLine3").textContent=isAddressQuotaBlocked()?"HERE quota reached; Mapbox unavailable":"Address services unavailable";
+  }
+  stopBlink("addressLine2");stopBlink("addressLine3");setDataState("weak");
+  return false;
 }
 const weatherMap={0:["Clear sky","☀️"],1:["Mainly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Rime fog","🌫️"],51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],61:["Light rain","🌦️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],71:["Light snow","🌨️"],73:["Snow","🌨️"],75:["Heavy snow","❄️"],80:["Rain showers","🌦️"],81:["Rain showers","🌧️"],82:["Heavy showers","⛈️"],95:["Thunderstorm","⛈️"],96:["Thunderstorm + hail","⛈️"],99:["Thunderstorm + hail","⛈️"]};
 function renderWeather(c,j,source="LIVE"){const [label,icon]=weatherMap[c.weather_code]||["Unknown","☁️"];$('temperature').textContent=Math.round(c.temperature_2m??0)+"°";$('temperaturePosition').textContent=Math.round(c.temperature_2m??0)+" °C";$('humidity').textContent=c.relative_humidity_2m!=null?Math.round(c.relative_humidity_2m)+"%":"—";$('feels').textContent=Math.round(c.apparent_temperature??0)+"°";$('wind').textContent=`${Math.round(c.wind_speed_10m??0)} km/h ${compass(c.wind_direction_10m)}`;$('gusts').textContent=Math.round(c.wind_gusts_10m??0)+" km/h";$('clouds').textContent=Math.round(c.cloud_cover??0)+"%";$('visibility').textContent=Number.isFinite(Number(c.visibility))?(Number(c.visibility)/1000).toFixed(1)+" km":"—";let uv="—";if(Array.isArray(j?.hourly?.time)&&Array.isArray(j?.hourly?.uv_index)&&c.time){let best=0,min=Infinity,target=new Date(c.time).getTime();j.hourly.time.forEach((t,i)=>{const d=Math.abs(new Date(t).getTime()-target);if(d<min){min=d;best=i}});if(j.hourly.uv_index[best]!=null)uv=Math.round(j.hourly.uv_index[best])}if(c.uv_index!=null)uv=Math.round(c.uv_index);$('uv').textContent=uv;$('condition').textContent=label;$('weatherIcon').textContent=icon;stopBlink("condition");localDateTime();$('footerNote').textContent=source==="LIVE"?"Location and weather updated automatically":"Offline cache: last available location/weather"}
