@@ -1,10 +1,9 @@
 /* Public frontend configuration.
    HERE remains server-side in Cloudflare Workers.
-   Mapbox uses a public browser token (pk...) and should be URL-restricted
-   to https://reghuagrasala.github.io in the Mapbox dashboard.
+   Mapbox uses a PUBLIC browser token (pk...). Restrict it to this GitHub Pages URL in Mapbox.
 */
 const MAPBOX_PUBLIC_TOKEN =
-  "pk.eyJ1IjoicmVnaHVhLWFncmFzYWxhIiwiYSI6ImNtdDlrNGE0OTExejMydnNjZ2h0NDZuenoifQ." +
+  "pk.eyJ1IjoicmVnaHVhLWFncmFzYWxhIiwiYSI6ImNtdTlrNGE0OTExejMydnNjZ2h0NDZuenoifQ." +
   "Outat1OJ0XjSZTQIGKyPLA";
 
 window.GPS_VIEWER_CONFIG = {
@@ -13,5 +12,7 @@ window.GPS_VIEWER_CONFIG = {
     "https://my-location-here.hrcvb7p7r5.workers.dev",
     "https://small-sky-cec5.hrcvb7p7r5.workers.dev"
   ],
+  // Restricted Mapbox public token for this GPS Viewer.
+  // Do NOT use an sk... secret token in this browser app.
   mapboxAccessToken: MAPBOX_PUBLIC_TOKEN
 };
