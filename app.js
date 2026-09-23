@@ -121,8 +121,7 @@ async function reverseGeocodeMapbox(lat,lon){
 async function reverseGeocode(lat,lon,force=false){
   if(!navigator.onLine)return false;
   if(isAddressQuotaBlocked()){
-    $("footerNote").textContent=`Address service quota reached — retry after ${quotaResetText()}`;
-    return false;
+    $("footerNote").textContent=`HERE monthly limit reached — using Mapbox until ${quotaResetText()}`;
   }
   const pos={coords:{latitude:lat,longitude:lon}};
   if(!addressLookupNeeded(pos,force))return false;
