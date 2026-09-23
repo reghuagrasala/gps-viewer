@@ -18,7 +18,11 @@ function stopBlink(id){$(id)?.classList.remove("loading-blink")}
 function localDateTime(){const d=new Date();$("weatherDate").textContent=d.toLocaleDateString("en-IN",{day:"2-digit",month:"2-digit",year:"2-digit"});$("weatherTime").textContent=d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true})}
 function setTimezone(){const z=Intl.DateTimeFormat().resolvedOptions().timeZone||"Asia/Kolkata";$("timezone").textContent=z==="Asia/Kolkata"?"Kolkata GMT+5:30":z.replace("Asia/","")}
 function distance(a,b){const R=6371000,r=Math.PI/180,d1=(b.coords.latitude-a.coords.latitude)*r,d2=(b.coords.longitude-a.coords.longitude)*r,x=Math.sin(d1/2)**2+Math.cos(a.coords.latitude*r)*Math.cos(b.coords.latitude*r)*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
-function findAddress(d){return d?.address||d?.location?.address||d?.result?.address||d?.reverse?.address||d?.data?.address||(d?.postalCode||d?.road||d?.label?d:{})}
+function findAddress(d){
+  const item=Array.isArray(d?.items)?d.items[0]:null;
+  return d?.address||item?.address||d?.location?.address||d?.result?.address||d?.reverse?.address||d?.data?.address||
+    item?.location?.address||(d?.postalCode||d?.road||d?.street||d?.label?d:{});
+}
 function findPrimary(d){return d?.primaryLocation||d?.primaryPlace||d?.place||d?.location?.place||d?.result?.primaryLocation||d?.data?.primaryLocation||{}}
 function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function setPostOfficeDisplay(name,pin=""){const e=$("postOffice");if(!e)return;const n=String(name||"").replace(/\s*\(?\d{6}\)?\s*$/g,"").trim(),p6=String(pin||"").match(/\d{6}/)?.[0]||String(name||"").match(/\d{6}/)?.[0]||"";if(!n){e.textContent=p6?`PIN ${p6}`:"—";return}e.innerHTML=`<span class="po-pin">${p6}</span><span class="po-name">${escapeHTML(n)}</span>`;e.title=p6?`${p6} ${n}`:n}
