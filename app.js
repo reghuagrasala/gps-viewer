@@ -68,6 +68,7 @@ async function reverseGeocodeMapbox(lat,lon){
     u.searchParams.set("country","IN");
     u.searchParams.set("language","en");
     u.searchParams.set("worldview","in");
+    u.searchParams.set("types","address,street,place");
     u.searchParams.set("access_token",token);
     const j=await fetchJSON(u,10000);
     const features=Array.isArray(j?.features)?j.features:[];
@@ -81,8 +82,20 @@ async function reverseGeocodeMapbox(lat,lon){
       }
       return "";
     };
-    const addressNumber=String(p.address_number||addr.address_number||"").trim();
-    const street=String(p.street||streetCtx.name||addr.street_name||"").trim();
+    let addressNumber=String(p.address_number||addr.address_number||"").trim();
+    let street=String(p.street||streetCtx.name||addr.street_name||"").trim();
+    // Mapbox address features expose the canonical address as properties.name.
+    // Use it only when the structured context did not provide the components.
+    const featureName=String(p.name||"").trim();
+    if(!street&&featureName){
+      const m=featureName.match(/^([0-9A-Za-z/-]+)\s+(.+)$/);
+      if(m){
+        if(!addressNumber)addressNumber=m[1];
+        street=m[2].trim();
+      }else if(p.feature_type==="street"){
+        street=featureName;
+      }
+    }
     const place=get("place");
     const city=place||get("locality","district");
     const district=get("district");
