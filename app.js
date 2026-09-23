@@ -44,8 +44,9 @@ function renderPlace(d,source="LIVE"){
   const placeLabel=String(d.currentPlace||p.name||city||locality||label||"Location identified").trim();
   $("placeName").textContent=placeLabel;
   $("placeIcon").textContent=p.name?placeEmoji(p.type||p.category):"⌖";
-  let l2=[house,road].filter(Boolean).join(" ").trim();
-  if(!l2&&label){const first=label.split(",")[0]?.trim();if(first&&first!==placeLabel)l2=first}
+  // Never use the full label as a substitute for the road:
+  // that can repeat the city/place name when Mapbox returns a place feature.
+  const l2=[house,road].filter(Boolean).join(" ").trim();
   let l3=[locality,district,county,city,state].map(x=>String(x||"").trim()).filter((x,i,arr)=>x&&arr.indexOf(x)===i).join(", ");
   if(pin)l3=l3?l3+" - "+pin:pin;
   $("addressLine2").textContent=l2;
