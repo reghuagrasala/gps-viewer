@@ -70,12 +70,19 @@ async function reverseGeocodeMapbox(lat,lon){
     u.searchParams.set("worldview","in");
     u.searchParams.set("access_token",token);
     const j=await fetchJSON(u,10000);
-    const f=Array.isArray(j?.features)?j.features.find(x=>x?.properties?.full_address||x?.properties?.place_formatted||x?.place_name):null;
+    const features=Array.isArray(j?.features)?j.features:[];
+    const f=features.find(x=>x?.properties?.feature_type==="address")||features[0];
     if(!f)return null;
-    const p=f.properties||{},ctx=p.context||{};
-    const get=(...keys)=>{for(const k of keys){const v=ctx?.[k]?.name??ctx?.[k]?.text??ctx?.[k];if(v)return String(v)}return ""};
-    const addressNumber=p.address_number||p.context?.address?.address_number||"";
-    const street=p.street||p.context?.street?.name||p.context?.address?.street_name||((p.feature_type==="street")?p.name:"");
+    const p=f.properties||{},ctx=p.context||{},addr=ctx.address||{},streetCtx=ctx.street||{};
+    const get=(...keys)=>{
+      for(const k of keys){
+        const v=ctx?.[k]?.name??ctx?.[k]?.text??ctx?.[k];
+        if(v!==undefined&&v!==null&&String(v).trim())return String(v).trim();
+      }
+      return "";
+    };
+    const addressNumber=String(p.address_number||addr.address_number||"").trim();
+    const street=String(p.street||streetCtx.name||addr.street_name||"").trim();
     const place=get("place");
     const city=place||get("locality","district");
     const district=get("district");
@@ -83,24 +90,44 @@ async function reverseGeocodeMapbox(lat,lon){
     const pin=get("postcode");
     const country=get("country")||"India";
     const locality=get("locality","neighborhood");
-    const label=p.full_address||f.place_name||place||[street,city,state].filter(Boolean).join(", ");
+    const full=String(p.full_address||"").trim();
+    const name=String(p.name||"").trim();
+    const label=full||[addressNumber,street,locality,city,district,state,pin].filter(Boolean).join(", ")||f.place_name||name;
     return {
-      address:{label,address_number:addressNumber,houseNumber:addressNumber,road:street,street,city,district,state,postalCode:pin,locality,neighborhood:locality,country},
+      address:{
+        label,
+        address_number:addressNumber,
+        houseNumber:addressNumber,
+        road:street,
+        street,
+        streetName:street,
+        city,
+        district,
+        state,
+        postalCode:pin,
+        locality,
+        neighborhood:locality,
+        country
+      },
       label,
       houseNumber:addressNumber,
       road:street,
+      street,
+      streetName:street,
       city,
       district,
       state,
       postalCode:pin,
       locality,
       country,
-      currentPlace:city||locality||p.name||label,
+      currentPlace:city||locality||district||name||label,
       source:"MAPBOX"
     };
-  }catch(e){return null}
+  }catch(e){
+    console.warn("Mapbox reverse geocode failed",e);
+    return null;
+  }
 }
-
 async function reverseGeocode(lat,lon){
   if(!navigator.onLine)return false;
   const now=Date.now();
