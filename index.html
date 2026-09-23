@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#121316">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,7 +16,6 @@
 <link rel="stylesheet" href="variables.css">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="overrides.css">
-<link rel="stylesheet" href="pwa-stable.css?v=1">
 
 <title>GPS Viewer</title>
 </head>
@@ -161,11 +160,23 @@
   </div>
 </section>
 
-
+<section id="fullScreenView" class="fullscreen-view" hidden aria-modal="true" role="dialog">
+  <button id="fullScreenBack" class="fullscreen-back" type="button" aria-label="Back">‹ <span>Back</span></button>
+  <div id="fullScreenContent" class="fullscreen-content"></div>
+</section>
 
 <footer id="footerNote">Location and weather updated automatically</footer>
 
-
+<div class="legacy-state" aria-hidden="true">
+  <span id="placeIcon">⌖</span>
+  <span id="digipin">—</span>
+  <span id="postOffice">—</span>
+  <span id="movement">Stationary</span>
+  <span id="temperaturePosition">—</span>
+  <span id="weatherDate">—</span>
+  <span id="weatherTime">—</span>
+  <button id="copyDigipin" type="button">Copy</button>
+</div>
 </main>
 
 <script src="digipin.js"></script>
