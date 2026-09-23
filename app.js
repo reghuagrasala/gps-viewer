@@ -118,6 +118,40 @@ async function reverseGeocodeMapbox(lat,lon){
   }
 }
 
+async function reverseGeocodeOSM(lat,lon){
+  if(!navigator.onLine)return null;
+  try{
+    const u=new URL("https://nominatim.openstreetmap.org/reverse");
+    u.searchParams.set("format","jsonv2");
+    u.searchParams.set("lat",String(lat));
+    u.searchParams.set("lon",String(lon));
+    u.searchParams.set("zoom","18");
+    u.searchParams.set("addressdetails","1");
+    u.searchParams.set("accept-language","en");
+    const r=await fetch(u,{cache:"no-store",headers:{Accept:"application/json"}});
+    if(!r.ok)return null;
+    const j=await r.json(),a=j?.address||{};
+    const road=String(a.road||a.pedestrian||a.footway||a.cycleway||"").trim();
+    const house=String(a.house_number||"").trim();
+    const locality=String(a.suburb||a.neighbourhood||a.village||"").trim();
+    const city=String(a.city||a.town||a.municipality||a.county||"").trim();
+    const district=String(a.state_district||"").trim();
+    const state=String(a.state||"").trim();
+    const pin=String(a.postcode||"").trim();
+    const country=String(a.country||"India").trim();
+    const label=String(j.display_name||[house,road,locality,city,district,state,pin,country].filter(Boolean).join(", ")).trim();
+    if(!label)return null;
+    return {
+      address:{label,address_number:house,houseNumber:house,road,street:road,city,district,state,postalCode:pin,locality,neighborhood:locality,country},
+      label,houseNumber:house,road,street:road,city,district,state,postalCode:pin,locality,country,
+      currentPlace:locality||city||district||state||label,source:"OPENSTREETMAP"
+    };
+  }catch(e){
+    console.warn("OpenStreetMap reverse geocode failed",e);
+    return null;
+  }
+}
+
 async function reverseGeocode(lat,lon,force=false){
   if(!navigator.onLine)return false;
   if(isAddressQuotaBlocked()){
@@ -173,6 +207,17 @@ async function reverseGeocode(lat,lon,force=false){
     lastAddressLookupPosition=pos;
     saveLocal(lastAddressCoordsKey,{lat,lon});
     await gvPut("address",lat,lon,mb);
+    setDataState("strong");
+    return true;
+  }
+  // Independent third fallback if HERE and Mapbox are unavailable.
+  const osm=await reverseGeocodeOSM(lat,lon);
+  if(osm){
+    latestPlaces=[];
+    renderPlace(osm,"OPENSTREETMAP");
+    lastAddressLookupPosition=pos;
+    saveLocal(lastAddressCoordsKey,{lat,lon});
+    await gvPut("address",lat,lon,osm);
     setDataState("strong");
     return true;
   }
