@@ -47,3 +47,24 @@
   letter-spacing: -1.2px;
   font-variant-numeric: tabular-nums;
 }
+
+
+/* Action controls: quiet grey icons only */
+.address-card .label-row .location-share-btn,
+.address-card .label-row .location-report-btn,
+.section-title .copy-btn {
+  background:#55585c !important;
+  border-color:#686b70 !important;
+  color:#e3e4e6 !important;
+}
+.address-card .label-row .location-share-btn::before,
+.section-title .copy-btn::before {
+  border-color:#e3e4e6 !important;
+  box-shadow:3px -3px 0 -1px #55585c,3px -3px 0 1px #e3e4e6 !important;
+}
+.address-card .label-row .location-report-btn::before {
+  color:#e3e4e6 !important;
+}
+.copy-btn.copied::after {
+  color:#e3e4e6 !important;
+}
