@@ -1,0 +1,18 @@
+/* iPhone standalone bottom-edge workaround */
+@media (display-mode: standalone) {
+  html, body {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    background: var(--bg) !important;
+  }
+  body {
+    min-height: 100vh !important;
+  }
+  .app {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: none !important;
+    padding-bottom: 0 !important;
+    background: var(--bg) !important;
+  }
+}
