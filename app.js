@@ -41,7 +41,7 @@ function renderPlace(d,source="LIVE"){
   let pin=pick(d.postalCode,d.postcode,d.postal_code,a.postalCode,a.postcode,a.postal_code,nested.postalCode,nested.postcode);
   if(!pin){const m=label.match(/\b\d{6}\b/);if(m)pin=m[0]}
   const locality=pick(d.locality,d.neighbourhood,d.neighborhood,a.locality,a.neighbourhood,a.neighborhood,nested.locality,nested.neighbourhood,nested.neighborhood);
-  const placeLabel=String(d.currentPlace||p.name||city||locality||label||"Location identified").trim();
+  const placeLabel=String(d.currentPlace||locality||road||city||label||"Location identified").trim();
   $("placeName").textContent=placeLabel;
   $("placeIcon").textContent=p.name?placeEmoji(p.type||p.category):"⌖";
   // Never use the full label as a substitute for the road:
