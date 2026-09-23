@@ -71,3 +71,21 @@ body{
 @supports (-webkit-touch-callout:none){
   input,button,a{touch-action:manipulation}
 }
+
+/* White utility tabs: copy + location-report controls */
+.copy-btn,.location-share-btn,.location-report-btn{
+  width:30px!important;height:24px!important;min-width:30px!important;padding:0!important;
+  border:1px solid rgba(255,255,255,.28)!important;border-radius:7px!important;
+  background:#f1eee5!important;color:#252525!important;
+  box-shadow:0 2px 5px rgba(0,0,0,.28)!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 30px!important;-webkit-tap-highlight-color:transparent;
+}
+.copy-btn::before{content:"▣";font-size:15px;line-height:1;font-weight:800}
+.copy-btn.copied::before{content:"✓"}
+.location-report-btn{font:800 17px/1 Arial,sans-serif!important;color:#252525!important;cursor:pointer}
+.location-share-btn{cursor:pointer}
+.copy-btn:active,.location-share-btn:active,.location-report-btn:active{transform:scale(.94);filter:brightness(.92)}
+.section-title .copy-btn{margin-left:auto}
+.address-card .label-row{gap:6px}
+.address-card .location-report-btn{position:static!important;margin-left:0!important}
