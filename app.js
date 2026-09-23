@@ -71,9 +71,9 @@ async function reverseGeocodeMapbox(lat,lon){
     const p=f.properties||{},ctx=p.context||{};
     const get=(...keys)=>{for(const k of keys){const v=ctx?.[k]?.name??ctx?.[k]?.text??ctx?.[k];if(v)return String(v)}return ""};
     const addressNumber=p.address_number||p.context?.address?.address_number||"";
-    const street=p.street||p.context?.street?.name||((p.feature_type==="street")?p.name:"");
-    const place=p.place_formatted||"";
-    const city=get("place","locality","district");
+    const street=p.street||p.context?.street?.name||p.context?.address?.street_name||((p.feature_type==="street")?p.name:"");
+    const place=get("place");
+    const city=place||get("locality","district");
     const district=get("district");
     const state=get("region");
     const pin=get("postcode");
