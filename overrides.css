@@ -1,22 +1,9 @@
 /* iPhone standalone bottom-edge workaround */
 @media (display-mode: standalone) {
-  html, body {
-    height: 100vh !important;
-    min-height: 100vh !important;
-    background: var(--bg) !important;
-  }
-  body {
-    min-height: 100vh !important;
-  }
-  .app {
-    height: 100vh !important;
-    min-height: 100vh !important;
-    max-height: none !important;
-    padding-bottom: 0 !important;
-    background: var(--bg) !important;
-  }
+  html, body { height:100vh !important; min-height:100vh !important; background:#0a0a0a !important; }
+  body { min-height:100vh !important; }
+  .app { height:100vh !important; min-height:100vh !important; max-height:none !important; padding-bottom:0 !important; background:#0a0a0a !important; }
 }
-
 
 /* Tap-to-expand Current Location */
 .address-card{cursor:pointer;}
@@ -26,53 +13,115 @@
 .address-card.address-expanded .address-line{white-space:normal;overflow:visible;text-overflow:clip;}
 .address-card.address-expanded .hidden-address{display:block !important;}
 
-
 /* Small fade hint for tap-to-expand */
-.address-card::after{content:"Tap to expand";position:absolute;right:12px;bottom:7px;font-size:10px;line-height:1;color:var(--text-secondary);opacity:.55;pointer-events:none;transition:opacity .2s ease;}
+.address-card::after{content:"Tap to expand";position:absolute;right:12px;bottom:7px;font-size:10px;line-height:1;color:#b9cdb5;opacity:.55;pointer-events:none;transition:opacity .2s ease;}
 .address-card.address-expanded::after{opacity:0;}
 
-
 /* Tall, thin result numerals for stable iPhone/PWA fitting */
-.metric strong,
-.weather-grid .metric strong {
-  font-family: "Avenir Next Condensed", "Helvetica Neue", "Arial Narrow", sans-serif;
-  font-weight: 400;
-  letter-spacing: -0.15px;
-  font-variant-numeric: tabular-nums;
+.metric strong,.weather-grid .metric strong{
+  font-family:"Avenir Next Condensed","Helvetica Neue",Arial,sans-serif;
+  font-weight:400;letter-spacing:-.15px;font-variant-numeric:tabular-nums;
+}
+.temp-row strong{
+  font-family:"Avenir Next Condensed","Helvetica Neue",Arial,sans-serif;
+  font-weight:400;letter-spacing:-1.2px;font-variant-numeric:tabular-nums;
 }
 
-.temp-row strong {
-  font-family: "Avenir Next Condensed", "Helvetica Neue", "Arial Narrow", sans-serif;
-  font-weight: 400;
-  letter-spacing: -1.2px;
-  font-variant-numeric: tabular-nums;
-}
-
-
-/* Action controls: quiet grey icons only */
+/* Quiet grey action icons */
 .address-card .label-row .location-share-btn,
 .address-card .label-row .location-report-btn,
-.section-title .copy-btn {
-  background:#55585c !important;
-  border-color:#686b70 !important;
-  color:#e3e4e6 !important;
+.section-title .copy-btn{
+  background:#3b443b !important;border-color:#596359 !important;color:#d7e4d3 !important;
 }
 .address-card .label-row .location-share-btn::before,
-.section-title .copy-btn::before {
-  border-color:#e3e4e6 !important;
-  box-shadow:3px -3px 0 -1px #55585c,3px -3px 0 1px #e3e4e6 !important;
+.section-title .copy-btn::before{
+  border-color:#d7e4d3 !important;
+  box-shadow:3px -3px 0 -1px #3b443b,3px -3px 0 1px #d7e4d3 !important;
 }
-.address-card .label-row .location-report-btn::before {
-  color:#e3e4e6 !important;
+.address-card .label-row .location-report-btn::before{color:#d7e4d3 !important;}
+.copy-btn.copied::after{color:#d7e4d3 !important;}
+
+/* ===== GPS DATA reference theme =====
+   Match the supplied sage-green reference without changing the existing layout. */
+html,body{background:#0a0a0a !important;color:#e8eee5 !important;}
+.app{
+  background:#0a0a0a !important;
+  background-image:none !important;
 }
-.copy-btn.copied::after {
-  color:#e3e4e6 !important;
+.titlebar h1{
+  color:#c6d9c1 !important;
+  text-shadow:0 0 10px rgba(185,210,180,.12);
+}
+.titlebar span{color:#899589 !important;}
+
+.status-card{
+  background:#1d291e !important;
+  color:#c6d9c1 !important;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.35) !important;
+}
+.status-card .status-dot{
+  background:#43d66b !important;
+  box-shadow:0 0 0 2px rgba(67,214,107,.16) !important;
 }
 
-/* Live green compass arrow — restored without legacy UI CSS */
-.compass-card{position:relative;overflow:hidden!important}.compass-card::after{content:"";position:absolute;left:88%;top:50%;width:4px;height:25px;border-radius:4px 4px 1px 1px;background:#39ff14;transform:translate(-50%,-100%) rotate(var(--needle-angle,0deg));transform-origin:50% 100%;box-shadow:0 0 0 1px rgba(18,19,22,.9),0 0 8px rgba(57,255,20,.5);pointer-events:none;z-index:1}.compass-card::before{content:"";position:absolute;left:88%;top:50%;width:8px;height:8px;border-radius:50%;background:#39ff14;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #121316,0 0 7px rgba(57,255,20,.45);pointer-events:none;z-index:2}.compass-card strong{position:relative;z-index:3}@media(max-height:760px){.compass-card::after{height:21px;width:3px}.compass-card::before{width:7px;height:7px}}
-/* Slightly narrower date card to keep the compass arrow clear */
-.position-row:nth-child(3) .metric:first-child{transform:scaleX(.92);transform-origin:right center}
+.address-card,
+.metric,
+.weather-main{
+  background:#405340 !important;
+  background-image:none !important;
+  border-color:#4c5f4c !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 5px 12px rgba(0,0,0,.28) !important;
+}
+.address-card{border-radius:18px !important;}
+.metric{border-radius:14px !important;}
+.weather-main{border-radius:18px !important;}
 
-/* Final compact compass/address refinements */
-@media (min-width:0px){.position-grid .compass-row{grid-template-columns:minmax(0,1.50fr) minmax(0,.75fr) minmax(0,.75fr)!important}.position-grid .compass-card::after{left:68%!important;width:2px!important;height:14px!important;border-radius:3px!important}.position-grid .compass-card::before{left:68%!important;width:4px!important;height:4px!important;box-shadow:0 0 0 1px #121316!important}.address-card .label-row{grid-template-columns:minmax(0,1fr) 30px!important}.address-card .label-row .location-share-btn{display:none!important}.address-card .label-row .location-report-btn{grid-column:2!important}}@media(max-height:760px){.position-grid .compass-card::after{height:12px!important}.position-grid .compass-card::before{width:4px!important;height:4px!important}}
+.label,.label-row,.metric-label{color:#b9cdb5 !important;}
+.section-title h2{color:#c6d9c1 !important;}
+.place-name,.address-line{color:#e7eee2 !important;}
+.metric strong{color:#edf2e9 !important;}
+.temp-row strong{color:#edf2e9 !important;}
+.condition{color:#edf2e9 !important;}
+.metric-icon{color:#b7cbb1 !important;}
+.thermo{color:#c0d4ba !important;}
+.weather-icon{filter:none !important;}
+
+.digipin-bar{
+  color:#dce7d9 !important;
+  background:transparent !important;
+}
+.digipin-label{color:#b9cdb5 !important;}
+
+.copy-btn,.share-btn{
+  background:#263326 !important;
+  border-color:#536353 !important;
+  color:#c6d9c1 !important;
+}
+
+.fullscreen-view{background:#0a0a0a !important;}
+.fullscreen-back{background:#263326 !important;color:#c6d9c1 !important;}
+.search-box input{background:#1c251d !important;color:#edf2e9 !important;border-color:#4b5b4b !important;}
+.map-actions a,.search-box button{background:#c6d9c1 !important;color:#101310 !important;}
+
+/* Live green compass arrow */
+.compass-card{position:relative;overflow:hidden!important;}
+.compass-card::after{
+  content:"";position:absolute;left:68%;top:50%;width:2px;height:14px;border-radius:3px;
+  background:#39ff14;transform:translate(-50%,-100%) rotate(var(--needle-angle,0deg));
+  transform-origin:50% 100%;box-shadow:0 0 0 1px rgba(18,19,22,.9),0 0 8px rgba(57,255,20,.5);
+  pointer-events:none;z-index:1;
+}
+.compass-card::before{
+  content:"";position:absolute;left:68%;top:50%;width:4px;height:4px;border-radius:50%;
+  background:#39ff14;transform:translate(-50%,-50%);box-shadow:0 0 0 1px #121316;
+  pointer-events:none;z-index:2;
+}
+.compass-card strong{position:relative;z-index:3;}
+.position-grid .compass-row{
+  grid-template-columns:minmax(0,1.50fr) minmax(0,.75fr) minmax(0,.75fr)!important;
+}
+.position-row:nth-child(3) .metric:first-child{transform:scaleX(.92);transform-origin:right center;}
+@media(max-height:760px){
+  .compass-card::after{height:12px;}
+  .compass-card::before{width:4px;height:4px;}
+}
