@@ -1,4 +1,4 @@
-const CACHE="gps-viewer-v71";
+const CACHE="gps-viewer-v72";
 const CORE=[
   "./","./index.html",
   "./variables.css?v=20260924b","./style.css?v=20260924b","./ui-fix.css?v=20260924c","./overrides.css?v=20260924b","./correction.css?v=20260924b",
