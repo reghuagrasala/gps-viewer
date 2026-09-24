@@ -155,3 +155,50 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   letter-spacing:0!important;
 }
 .address-card .label-row{font-size:17px!important;font-weight:600!important;}
+
+
+/* Final iPhone fit + readable address typography */
+@media (min-height:901px){
+  .app{gap:3px!important;padding-top:max(2px,env(safe-area-inset-top))!important;padding-bottom:0!important;}
+  .titlebar{height:36px!important;flex-basis:36px!important;}
+  .status-row{height:34px!important;flex-basis:34px!important;gap:8px!important;}
+  .status-card{height:34px!important;}
+  .address-card{height:126px!important;flex-basis:126px!important;padding-top:7px!important;}
+  .section-title{height:24px!important;flex-basis:24px!important;margin-top:1px!important;}
+  .digipin-bar{height:21px!important;flex-basis:21px!important;}
+  .position-grid{gap:5px!important;}
+  .position-row{gap:5px!important;}
+  .position-row .metric{height:47px!important;padding:5px 8px!important;}
+  .position-grid .compass-card{height:47px!important;}
+  .weather-main{height:62px!important;flex-basis:62px!important;padding:5px 12px!important;}
+  .weather-grid{gap:5px!important;}
+  .weather-grid .metric{height:44px!important;padding:5px 8px!important;}
+  .metric-label{font-size:11px!important;line-height:1.05!important;}
+  .metric strong{font-size:13px!important;margin-top:2px!important;}
+}
+.address-card .label-row,
+.address-card .place-name,
+.address-card .location-po,
+.address-card .location-area,
+.address-card #addressLine2,
+.address-card #addressLine4{
+  font-family:"Avenir Next","Helvetica Neue",-apple-system,BlinkMacSystemFont,Arial,sans-serif!important;
+  font-stretch:normal!important;
+  letter-spacing:0!important;
+}
+.address-card .label-row{font-size:17px!important;font-weight:650!important;}
+.address-card .place-name{font-size:15px!important;font-weight:600!important;line-height:1.08!important;}
+.address-card .location-po,
+.address-card .location-area,
+.address-card #addressLine2,
+.address-card #addressLine4{
+  font-size:12.8px!important;
+  font-weight:500!important;
+  line-height:1.08!important;
+}
+.address-card .address-content{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding-right:0!important;
+  touch-action:pan-y!important;
+}
