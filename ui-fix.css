@@ -243,3 +243,21 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   min-width:0!important;
   width:100%!important;
 }
+
+
+/* Compass refinement: longer heading needle plus a fixed north marker. */
+.position-grid .compass-card::after{
+  width:4px!important;
+  height:31px!important;
+  border-radius:4px 4px 1px 1px!important;
+}
+.position-grid .compass-card::before{
+  width:8px!important;
+  height:8px!important;
+}
+/* Fixed ^ marker identifies North at the top of the compass card. */
+.position-grid .compass-card{
+  --north-marker:#e8f1e5;
+}
+.position-grid .compass-card::marker{display:none!important;}
+.position-grid .compass-card .north-marker{display:none!important;}
