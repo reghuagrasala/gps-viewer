@@ -20,3 +20,102 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
 @media (min-height:901px){:root{--ui-gap:5px}.app{gap:5px;padding-top:max(3px,env(safe-area-inset-top));padding-bottom:0}.titlebar{height:38px;flex-basis:38px}.status-row{height:36px;flex-basis:36px}.status-card{height:36px}.address-card{height:135px;flex-basis:135px;padding-top:8px}.section-title{height:27px;flex-basis:27px}.digipin-bar{height:23px;flex-basis:23px}.metric{height:51px;padding:5px 8px}.position-grid{gap:6px!important}.position-row{gap:6px!important}.position-grid .compass-card{height:47px!important}.weather-main{height:66px;flex-basis:66px;padding:6px 12px}.weather-grid{gap:6px!important}.weather-grid .metric{height:48px}.metric-label{font-size:11px}.metric strong{font-size:13px!important;margin-top:2px}.position-grid .metric strong{font-size:13px!important}.address-card .place-name{font-size:15px!important;line-height:1.04!important}.address-card .location-po,.address-card .location-area,.address-card #addressLine2{font-size:13.5px!important;line-height:1.05!important}.address-card .label-row{font-size:17px!important;height:28px!important;min-height:28px!important}.address-card .label-row .location-share-btn,.address-card .label-row .location-report-btn{width:28px!important;height:28px!important;min-width:28px!important}.address-card .address-content{overflow-y:auto!important;touch-action:pan-y!important}}
 /* Fifth line: move country out of the locality line and allow the address to show it separately. */
 .address-card .location-area{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;word-break:normal!important}.address-card #addressLine3{max-width:100%!important}.address-card #addressLine2{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important}
+
+/* GPS Viewer final alignment — GPS cards equal to weather cards; address contents contained */
+.position-grid .position-row,
+.weather-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.position-grid .position-row{
+  gap:6px!important;
+}
+.position-grid .position-row .metric{
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+.position-grid .compass-row{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.position-grid .compass-card{
+  width:100%!important;
+  min-width:0!important;
+}
+
+/* Keep GPS values readable without allowing a tab to change width. */
+.position-grid .metric-label,
+.weather-grid .metric-label{
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.position-grid .metric strong{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+}
+
+/* Address card: six address lines must remain inside the card on iPhone. */
+.address-card{
+  overflow:hidden!important;
+}
+.address-card .address-content{
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding-right:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-width:none!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+.address-card .address-content::-webkit-scrollbar{display:none!important}
+.address-card .label-row{
+  flex:0 0 27px!important;
+  height:27px!important;
+  min-height:27px!important;
+}
+.address-card .place-name{
+  flex:0 0 auto!important;
+  font-size:15px!important;
+  line-height:1.05!important;
+  margin:0 0 1px!important;
+}
+.address-card .location-po,
+.address-card .location-area,
+.address-card #addressLine2,
+.address-card #addressLine4{
+  flex:0 0 auto!important;
+  font-size:13px!important;
+  line-height:1.02!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+.address-card .location-po,
+.address-card .location-area,
+.address-card #addressLine2,
+.address-card #addressLine4{
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.address-card #addressLine2{
+  order:2!important;
+}
+.address-card .location-po{
+  order:3!important;
+}
+.address-card .location-area{
+  order:4!important;
+}
+.address-card #addressLine4{
+  order:5!important;
+}
+
+/* Keep the report/action control aligned with the address heading. */
+.address-card .label-row .location-report-btn{
+  align-self:center!important;
+}
