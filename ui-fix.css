@@ -261,3 +261,20 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
 }
 .position-grid .compass-card::marker{display:none!important;}
 .position-grid .compass-card .north-marker{display:none!important;}
+
+
+/* Fixed North reference marker at the top of the heading card. */
+.position-grid .compass-card .metric-label{
+  position:relative!important;
+}
+.position-grid .compass-card .metric-label::after{
+  content:"^"!important;
+  position:absolute!important;
+  left:50%!important;
+  top:-1px!important;
+  transform:translateX(-50%)!important;
+  color:#e8f1e5!important;
+  font:800 12px/1 Arial,sans-serif!important;
+  opacity:.9!important;
+  pointer-events:none!important;
+}
