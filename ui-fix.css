@@ -202,3 +202,44 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   padding-right:0!important;
   touch-action:pan-y!important;
 }
+
+
+/* Keep metric icons completely away from the result line. */
+.metric{
+  position:relative!important;
+}
+.metric-label{
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  padding-right:22px!important;
+  box-sizing:border-box!important;
+}
+.metric-label .metric-icon{
+  position:absolute!important;
+  right:0!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  float:none!important;
+  margin:0!important;
+  line-height:1!important;
+  width:18px!important;
+  text-align:center!important;
+  z-index:2!important;
+}
+.metric strong{
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  padding-right:0!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+/* Give accuracy and air-pressure results the full card width. */
+#accuracy,#pressure{
+  padding-right:0!important;
+  min-width:0!important;
+  width:100%!important;
+}
