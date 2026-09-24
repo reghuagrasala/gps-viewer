@@ -394,3 +394,49 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   content:""!important;
   display:none!important;
 }
+
+
+/* Restore the compact bright-green heading arrow.
+   It follows the live iPhone heading angle while staying at centre-right. */
+.position-grid .compass-card{
+  position:relative!important;
+  overflow:hidden!important;
+}
+.position-grid .compass-card::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:auto!important;
+  right:48px!important;
+  top:50%!important;
+  width:4px!important;
+  height:31px!important;
+  transform:translate(50%,-100%) rotate(var(--needle-angle,0deg))!important;
+  transform-origin:50% 100%!important;
+  border-radius:4px!important;
+  background:#39ff14!important;
+  border:0!important;
+  box-shadow:0 0 3px rgba(57,255,20,.85),0 0 9px rgba(57,255,20,.45)!important;
+  z-index:4!important;
+  pointer-events:none!important;
+}
+.position-grid .compass-card::after{
+  content:""!important;
+  position:absolute!important;
+  left:auto!important;
+  right:48px!important;
+  top:50%!important;
+  width:8px!important;
+  height:8px!important;
+  transform:translate(50%,-50%)!important;
+  border-radius:50%!important;
+  background:#39ff14!important;
+  border:1px solid #0b1b0b!important;
+  box-shadow:0 0 6px rgba(57,255,20,.7)!important;
+  z-index:5!important;
+  pointer-events:none!important;
+}
+.position-grid .compass-card .metric-label::after{
+  content:""!important;
+  display:none!important;
+}
