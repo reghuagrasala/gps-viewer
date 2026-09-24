@@ -278,3 +278,31 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   opacity:.9!important;
   pointer-events:none!important;
 }
+
+
+/* Simple North finder: remove the potentially misleading direction needle.
+   Keep one large fixed green circle at the top/12-o'clock position. */
+.position-grid .compass-card::after{
+  content:""!important;
+  position:absolute!important;
+  left:50%!important;
+  top:6px!important;
+  width:18px!important;
+  height:18px!important;
+  border-radius:50%!important;
+  background:#39ff14!important;
+  border:2px solid #0b1b0b!important;
+  transform:translateX(-50%)!important;
+  transform-origin:center!important;
+  box-shadow:0 0 0 2px rgba(57,255,20,.18),0 0 10px rgba(57,255,20,.55)!important;
+  pointer-events:none!important;
+  z-index:4!important;
+}
+.position-grid .compass-card::before{
+  content:""!important;
+  display:none!important;
+}
+.position-grid .compass-card .metric-label::after{
+  content:""!important;
+  display:none!important;
+}
