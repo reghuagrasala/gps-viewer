@@ -1,7 +1,7 @@
-const CACHE="gps-viewer-v67";
+const CACHE="gps-viewer-v68";
 const CORE=[
   "./","./index.html",
-  "./variables.css?v=20260924b","./style.css?v=20260924b","./overrides.css?v=20260924b","./correction.css?v=20260924b",
+  "./variables.css?v=20260924b","./style.css?v=20260924b","./ui-fix.css?v=20260924c","./overrides.css?v=20260924b","./correction.css?v=20260924b",
   "./app.js","./compass.js","./config.js","./digipin.js","./offline-cache.js?v=3","./manifest.webmanifest",
   "./favicon.svg","./apple-touch-icon.png","./icon-192.png","./icon-512.png"
 ];
