@@ -119,3 +119,39 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
 .address-card .label-row .location-report-btn{
   align-self:center!important;
 }
+
+
+/* Final iPhone 932px fit: keep the complete third weather row visible. */
+@media (min-height:901px){
+  .app{gap:4px!important;padding-top:max(3px,env(safe-area-inset-top))!important;padding-bottom:max(2px,env(safe-area-inset-bottom))!important;}
+  .address-card{height:125px!important;flex-basis:125px!important;}
+  .section-title{height:25px!important;flex-basis:25px!important;}
+  .digipin-bar{height:22px!important;flex-basis:22px!important;}
+  .position-grid{gap:5px!important;}
+  .position-grid .position-row{gap:5px!important;}
+  .position-grid .position-row .metric{height:46px!important;}
+  .weather-main{height:64px!important;flex-basis:64px!important;}
+  .weather-grid{gap:5px!important;}
+  .weather-grid .metric{height:44px!important;}
+}
+
+/* Address text: use a wider, easier-to-read system font instead of the condensed face. */
+.address-card .label-row,
+.address-card .place-name,
+.address-card .location-po,
+.address-card .location-area,
+.address-card #addressLine2,
+.address-card #addressLine4{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif!important;
+  font-stretch:normal!important;
+}
+.address-card .place-name{font-size:16px!important;font-weight:600!important;}
+.address-card .location-po,
+.address-card .location-area,
+.address-card #addressLine2,
+.address-card #addressLine4{
+  font-size:13.5px!important;
+  font-weight:400!important;
+  letter-spacing:0!important;
+}
+.address-card .label-row{font-size:17px!important;font-weight:600!important;}
