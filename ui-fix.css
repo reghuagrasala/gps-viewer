@@ -567,3 +567,51 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   pointer-events:auto!important;
   touch-action:manipulation!important;
 }
+
+
+/* v83 — very compact collapsed address; tap to expand for the complete address */
+@media (min-height:901px){
+  .address-card{
+    height:48px!important;
+    flex-basis:48px!important;
+    min-height:48px!important;
+    padding-top:1px!important;
+  }
+  .address-card .label-row{
+    height:19px!important;
+    min-height:19px!important;
+    flex-basis:19px!important;
+    line-height:1!important;
+  }
+  .address-card .place-name{
+    height:19px!important;
+    max-height:19px!important;
+    margin:0!important;
+    font-size:14px!important;
+    line-height:19px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  /* Keep the compact state clean: the complete address appears only after tapping. */
+  .address-card:not(.address-expanded) .location-po,
+  .address-card:not(.address-expanded) .location-area,
+  .address-card:not(.address-expanded) #addressLine2,
+  .address-card:not(.address-expanded) #addressLine4{
+    display:none!important;
+  }
+  .address-card:not(.address-expanded) .address-content{
+    overflow:hidden!important;
+  }
+  .address-card.address-expanded{
+    height:166px!important;
+    flex-basis:166px!important;
+    min-height:166px!important;
+  }
+  .address-card.address-expanded .location-po,
+  .address-card.address-expanded .location-area,
+  .address-card.address-expanded #addressLine2,
+  .address-card.address-expanded #addressLine4{
+    display:block!important;
+  }
+}
