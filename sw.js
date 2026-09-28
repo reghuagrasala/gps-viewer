@@ -1,8 +1,8 @@
-const CACHE="gps-viewer-v77";
+const CACHE="gps-viewer-v78";
 const CORE=[
   "./","./index.html",
-  "./variables.css?v=20260924b","./style.css?v=20260924b","./ui-fix.css?v=20260924c","./overrides.css?v=20260924b","./correction.css?v=20260924b",
-  "./app.js","./compass.js","./config.js","./digipin.js","./offline-cache.js?v=3","./manifest.webmanifest",
+  "./variables.css?v=20260924b","./style.css?v=20260924b","./ui-fix.css?v=20260924c","./overrides.css?v=20260924b","./correction.css?v=20260924b","./metric-info.css?v=1",
+  "./app.js","./compass.js","./metric-info.js","./config.js","./digipin.js","./offline-cache.js?v=3","./manifest.webmanifest",
   "./favicon.svg","./apple-touch-icon.png","./icon-192.png","./icon-512.png"
 ];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
