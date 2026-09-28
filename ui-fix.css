@@ -519,3 +519,51 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   touch-action:manipulation!important;
   -webkit-tap-highlight-color:transparent!important;
 }
+
+
+/* v82 — compact address, larger DIGIPIN touch target */
+@media (min-height:901px){
+  .address-card{
+    height:88px!important;
+    flex-basis:88px!important;
+    min-height:88px!important;
+    padding-top:1px!important;
+  }
+  .address-card .label-row{
+    height:20px!important;
+    min-height:20px!important;
+    flex-basis:20px!important;
+  }
+  .address-card .place-name{
+    font-size:14px!important;
+    line-height:1!important;
+  }
+  .address-card .location-po,
+  .address-card .location-area,
+  .address-card #addressLine2,
+  .address-card #addressLine4{
+    font-size:12.5px!important;
+    line-height:1!important;
+  }
+  .digipin-bar{
+    height:27px!important;
+    flex-basis:27px!important;
+    min-width:240px!important;
+    max-width:68%!important;
+    padding:5px 16px!important;
+    border-radius:14px!important;
+    gap:6px!important;
+  }
+  .digipin-bar .digipin-label{font-size:10px!important}
+  .digipin-bar #locationDigi{font-size:12px!important;letter-spacing:.45px!important}
+}
+.address-card.address-expanded{
+  height:166px!important;
+  flex-basis:166px!important;
+  min-height:166px!important;
+}
+.digipin-bar.metric-info-trigger{
+  cursor:pointer!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+}
