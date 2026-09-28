@@ -104,3 +104,23 @@
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(bind,0),{once:true});
   else setTimeout(bind,0);
 })();
+
+
+/* v82 — direct DIGIPIN touch target.  Bind the capsule itself, not its text span. */
+(function(){
+  function bindDirect(){
+    const bar=document.querySelector('.digipin-bar');
+    if(!bar || bar.dataset.directDigiInfo==='1')return;
+    bar.dataset.directDigiInfo='1';
+    const openDigi=(e)=>{
+      if(e.type==='touchend')e.preventDefault();
+      e.stopPropagation();
+      if(window.GPSViewerMetricInfo?.open) window.GPSViewerMetricInfo.open('digipin');
+    };
+    bar.addEventListener('pointerup',openDigi,{passive:false});
+    bar.addEventListener('touchend',openDigi,{passive:false});
+    bar.addEventListener('click',openDigi);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(bindDirect,150),{once:true});
+  else setTimeout(bindDirect,150);
+})();
