@@ -440,3 +440,82 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
   content:""!important;
   display:none!important;
 }
+
+
+/* v79 — iPhone 932px PWA fit and address/metric touch fixes */
+@media (min-height:901px){
+  .app{
+    gap:2px!important;
+    padding-top:0!important;
+    padding-bottom:0!important;
+  }
+  .titlebar{height:34px!important;flex-basis:34px!important}
+  .status-row{height:32px!important;flex-basis:32px!important;gap:7px!important}
+  .status-card{height:32px!important}
+  .address-card{
+    height:106px!important;
+    flex-basis:106px!important;
+    padding-top:2px!important;
+  }
+  .address-card .label-row{
+    height:22px!important;
+    min-height:22px!important;
+    flex-basis:22px!important;
+    line-height:1!important;
+  }
+  .address-card .place-name{
+    font-size:15px!important;
+    line-height:1.02!important;
+    margin-bottom:1px!important;
+  }
+  .address-card .location-po,
+  .address-card .location-area,
+  .address-card #addressLine2,
+  .address-card #addressLine4{
+    font-size:13px!important;
+    line-height:1.02!important;
+  }
+  .section-title{height:22px!important;flex-basis:22px!important;margin-top:0!important}
+  .digipin-bar{height:20px!important;flex-basis:20px!important}
+  .position-grid{gap:4px!important}
+  .position-row{gap:5px!important}
+  .position-row .metric{height:43px!important;padding:4px 8px!important}
+  .position-grid .compass-card{height:43px!important}
+  .weather-main{height:57px!important;flex-basis:57px!important;padding:4px 12px!important}
+  .weather-grid{gap:4px!important}
+  .weather-grid .metric{height:40px!important;padding:4px 8px!important}
+  .metric-label{font-size:10.5px!important;line-height:1.02!important}
+  .metric strong{font-size:12.6px!important;margin-top:2px!important}
+}
+
+/* The normal address is compact; tapping it expands the card so all address lines can be read. */
+.address-card.address-expanded{
+  height:166px!important;
+  flex-basis:166px!important;
+  min-height:166px!important;
+  z-index:20!important;
+}
+.address-card.address-expanded .address-content{
+  overflow:visible!important;
+}
+.address-card.address-expanded .place-name,
+.address-card.address-expanded .location-po,
+.address-card.address-expanded .location-area,
+.address-card.address-expanded #addressLine2,
+.address-card.address-expanded #addressLine4{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+
+/* DIGIPIN and all explanation targets must behave as taps, not horizontal scroll areas. */
+.digipin-bar.metric-info-trigger{
+  touch-action:manipulation!important;
+  overflow:hidden!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+.metric-info-trigger{
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
