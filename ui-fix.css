@@ -661,3 +661,156 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
     text-align:right!important;
   }
 }
+
+
+/* v20260928 — stable iPhone PWA geometry.
+   Use one fixed compact geometry for all iPhone heights. This avoids
+   viewport-height media queries redistributing the Home Screen.
+   Shorter screens scroll the inner app rather than changing the layout. */
+@media (max-width:599px){
+  html,body{
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:none!important;
+    overflow:hidden!important;
+  }
+  body{position:fixed!important;inset:0!important;}
+  .app{
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:none!important;
+    gap:4px!important;
+    padding-top:max(0px,env(safe-area-inset-top))!important;
+    padding-bottom:max(0px,env(safe-area-inset-bottom))!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+
+  .titlebar{height:40px!important;flex:0 0 40px!important;}
+  .titlebar h1{font-size:26px!important;}
+  .titlebar span{font-size:11px!important;}
+
+  .status-row{height:38px!important;flex:0 0 38px!important;gap:8px!important;}
+  .status-card{height:38px!important;font-size:15px!important;}
+
+  .address-card{
+    height:82px!important;
+    flex:0 0 82px!important;
+    min-height:82px!important;
+    padding:7px 12px!important;
+  }
+  .address-card:not(.address-expanded) .location-po,
+  .address-card:not(.address-expanded) .location-area,
+  .address-card:not(.address-expanded) #addressLine2,
+  .address-card:not(.address-expanded) #addressLine4{
+    display:none!important;
+  }
+  .address-card:not(.address-expanded) .address-content{
+    overflow:hidden!important;
+  }
+  .address-card .label-row{
+    height:22px!important;
+    min-height:22px!important;
+    flex-basis:22px!important;
+    font-size:18px!important;
+    margin-bottom:1px!important;
+  }
+  .address-card .place-name{
+    height:20px!important;
+    max-height:20px!important;
+    font-size:16px!important;
+    line-height:20px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    margin:0!important;
+  }
+  .address-card.address-expanded{
+    height:166px!important;
+    flex-basis:166px!important;
+    min-height:166px!important;
+  }
+
+  .section-title{
+    height:26px!important;
+    flex:0 0 26px!important;
+    margin-top:0!important;
+  }
+  .section-title h2{font-size:18px!important;line-height:26px!important;}
+
+  .digipin-bar{
+    height:27px!important;
+    flex:0 0 27px!important;
+    min-width:220px!important;
+    max-width:70%!important;
+    padding:4px 14px!important;
+    border-radius:14px!important;
+  }
+  .digipin-bar .digipin-label{font-size:10px!important;}
+  .digipin-bar #locationDigi{font-size:12px!important;}
+
+  .position-grid{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:5px!important;
+    flex:0 0 auto!important;
+  }
+  .position-row{
+    height:44px!important;
+    flex:0 0 44px!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  .position-row .metric{
+    height:44px!important;
+    min-height:44px!important;
+    padding:4px 8px!important;
+    border-radius:14px!important;
+  }
+  .position-grid .compass-row{
+    grid-template-columns:minmax(0,1.35fr) minmax(0,.825fr) minmax(0,.825fr)!important;
+  }
+  .position-grid .compass-card{height:44px!important;min-height:44px!important;}
+  .metric-label{font-size:11px!important;line-height:1!important;}
+  .metric strong{font-size:13.5px!important;margin-top:3px!important;}
+
+  .weather-main{
+    height:58px!important;
+    flex:0 0 58px!important;
+    min-height:58px!important;
+    padding:4px 12px!important;
+    position:relative!important;
+  }
+  .weather-main .weather-info{padding-right:135px!important;}
+  .weather-main .weather-place{
+    position:absolute!important;
+    right:16px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    max-width:120px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    color:#dce8d8!important;
+    font-size:13px!important;
+    font-weight:600!important;
+    text-align:right!important;
+  }
+  .weather-grid{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+    flex:0 0 auto!important;
+  }
+  .weather-grid .metric{
+    height:42px!important;
+    min-height:42px!important;
+    padding:4px 8px!important;
+    border-radius:14px!important;
+  }
+  .weather-grid .metric strong{font-size:13px!important;margin-top:2px!important;}
+
+  .copy-btn{width:30px!important;min-width:30px!important;height:26px!important;}
+}
