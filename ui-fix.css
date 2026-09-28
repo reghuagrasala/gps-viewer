@@ -898,3 +898,19 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
     gap:10px!important;
   }
 }
+
+
+/* v20260928j — minimal line-like spacing between metric tabs.
+   Keep the card heights unchanged; tighten only the gaps from GPS data
+   through the complete weather metric grid. */
+@media (max-width:599px){
+  .position-grid{
+    gap:4px!important;
+  }
+  .position-row{
+    gap:4px!important;
+  }
+  .weather-grid{
+    gap:4px!important;
+  }
+}
