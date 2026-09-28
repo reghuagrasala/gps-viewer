@@ -878,3 +878,23 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
     flex-basis:32px!important;
   }
 }
+
+
+/* v20260928i — restore safe-area clearance for the title, while using
+   the spare lower viewport for comfortable row spacing. */
+@media (max-width:599px){
+  .app{
+    padding-top:env(safe-area-inset-top)!important;
+    padding-bottom:0!important;
+  }
+  .titlebar{
+    height:32px!important;
+    flex-basis:32px!important;
+  }
+  .position-grid{
+    gap:10px!important;
+  }
+  .weather-grid{
+    gap:10px!important;
+  }
+}
