@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="style.css?v=20260924b">
 <link rel="stylesheet" href="ui-fix.css?v=20260924c">
 <link rel="stylesheet" href="overrides.css?v=20260924b">
-<link rel="stylesheet" href="correction.css?v=20260924b">
+<link rel="stylesheet" href="correction.css?v=20260924b">\n<link rel="stylesheet" href="metric-info.css?v=1">
 <title>GPS Viewer</title>
 </head>
 <body>
@@ -50,7 +50,7 @@
 <footer id="footerNote">Location and weather updated automatically</footer>
 <div class="legacy-state" aria-hidden="true"><span id="placeIcon">⌖</span><span id="digipin">—</span><span id="postOffice">—</span><span id="movement">Stationary</span><span id="temperaturePosition">—</span><span id="weatherDate">—</span><span id="weatherTime">—</span><button id="copyDigipin" type="button">Copy</button></div>
 </main>
-<script src="digipin.js"></script><script src="offline-cache.js?v=3"></script><script src="config.js"></script><script src="offline-clock.js?v=1"></script><script src="app.js"></script><script src="compass.js"></script><script src="correction.js?v=8"></script><script src="ui-v66.js?v=7"></script>
+<script src="digipin.js"></script><script src="offline-cache.js?v=3"></script><script src="config.js"></script><script src="offline-clock.js?v=1"></script><script src="app.js"></script><script src="compass.js"></script><script src="correction.js?v=8"></script><script src="metric-info.js?v=1"></script><script src="ui-v66.js?v=7"></script>
 <script>
 (function(){
 function sync(){const d=document.getElementById('digipin'),p=document.getElementById('postOffice'),dl=document.getElementById('locationDigi'),pl=document.getElementById('locationPO'),area=document.getElementById('addressLine3'),country=document.getElementById('addressLine4');if(d&&dl)dl.textContent=(d.textContent||'—').trim();if(p&&pl){let raw=(p.textContent||'—').replace(/\s+/g,' ').trim(),pin=(raw.match(/\d{6}/)||[])[0]||'',name=raw.replace(/\(?\d{6}\)?/g,'').replace(/^Finding post office…$/,'').trim();pl.textContent='PO. '+(pin?(name+' - '+pin):name||'—')}if(area){let s=(area.textContent||'').replace(/\s+-\s+\d{6}\s*$/,'').replace(/\s*,\s*India\s*$/i,'').trim();area.textContent=s;area.style.display='block';area.style.visibility='visible'}if(country){country.textContent='India';country.style.display='block';country.style.visibility='visible'}const d1=document.getElementById('weatherDate'),t1=document.getElementById('weatherTime'),gd=document.getElementById('gpsDate'),gt=document.getElementById('gpsTime');if(d1&&gd)gd.textContent=d1.textContent;if(t1&&gt)gt.textContent=t1.textContent}
