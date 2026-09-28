@@ -865,3 +865,16 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
     min-height:50px!important;
   }
 }
+
+
+/* v20260928h — reduce unused top space on iPhone PWA.
+   Keep the GPS and Weather card geometry unchanged. */
+@media (max-width:599px){
+  .app{
+    padding-top:0!important;
+  }
+  .titlebar{
+    height:32px!important;
+    flex-basis:32px!important;
+  }
+}
