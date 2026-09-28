@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="variables.css?v=20260924b">
 <link rel="stylesheet" href="style.css?v=20260924b">
-<link rel="stylesheet" href="ui-fix.css?v=20260928d">
+<link rel="stylesheet" href="ui-fix.css?v=20260928e">
 <link rel="stylesheet" href="overrides.css?v=20260924b">
 <link rel="stylesheet" href="correction.css?v=20260924b">\n<link rel="stylesheet" href="metric-info.css?v=2">
 <title>GPS Viewer</title>
@@ -44,7 +44,7 @@
 <div class="position-row equal-row"><div class="metric" title="Date from the iPhone/device clock; works offline"><div class="metric-label">date <span class="metric-icon">▣</span></div><strong id="gpsDate">—</strong></div><div class="metric" title="Time from the iPhone/device clock; works offline"><div class="metric-label">time <span class="metric-icon">◷</span></div><strong id="gpsTime">—</strong></div><div class="metric"><div class="metric-label">time zone <span class="metric-icon">◷</span></div><strong id="timezone">Calcutta</strong></div></div>
 </section>
 <div class="section-title"><h2>Current Weather</h2><button class="copy-btn" id="copyWeather" type="button" aria-label="Copy current weather" title="Copy current weather"></button></div>
-<section class="weather-main"><div class="weather-info"><div class="temp-row"><span class="thermo">☁</span><strong id="temperature">—°</strong><span class="condition" id="condition">Weather needs data</span></div></div><div class="weather-icon" id="weatherIcon" aria-hidden="true">☁️</div></section>
+<section class="weather-main"><div class="weather-info"><div class="temp-row"><span class="thermo">☁</span><strong id="temperature">—°</strong><span class="condition" id="condition">Weather needs data</span></div></div><span class="weather-place" id="weatherPlace">—</span><div class="weather-icon" id="weatherIcon" aria-hidden="true">☁️</div></section>
 <section class="three-col weather-grid"><div class="metric"><div class="metric-label">Feels like <span class="metric-icon">♨</span></div><strong id="feels">—</strong></div><div class="metric"><div class="metric-label">Wind <span class="metric-icon">✣</span></div><strong id="wind">—</strong></div><div class="metric"><div class="metric-label">Gusts <span class="metric-icon">✣</span></div><strong id="gusts">—</strong></div><div class="metric"><div class="metric-label">visibility <span class="metric-icon">◉</span></div><strong id="visibility">—</strong></div><div class="metric"><div class="metric-label">humidity <span class="metric-icon">●</span></div><strong id="humidity">—</strong></div><div class="metric"><div class="metric-label">Clouds <span class="metric-icon">☁</span></div><strong id="clouds">—</strong></div><div class="metric"><div class="metric-label">UV index <span class="metric-icon">☼</span></div><strong id="uv">—</strong></div><div class="metric"><div class="metric-label">AQI <span class="metric-icon">●</span></div><strong id="aqi">—</strong></div><div class="metric"><div class="metric-label">Air Pressure <span class="metric-icon">▣</span></div><strong id="pressure">—</strong></div></section>
 <section id="fullScreenView" class="fullscreen-view" hidden aria-modal="true" role="dialog"><button id="fullScreenBack" class="fullscreen-back" type="button" aria-label="Back">‹ <span>Back</span></button><div id="fullScreenContent" class="fullscreen-content"></div></section>
 <footer id="footerNote">Location and weather updated automatically</footer>
