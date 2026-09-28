@@ -85,6 +85,7 @@
       if(!metric || metric.dataset.infoBound)return;
       metric.dataset.infoBound="true";
       metric.classList.add("metric-info-trigger");
+      metric.style.touchAction="manipulation";
       metric.setAttribute("role","button");
       metric.setAttribute("tabindex","0");
       metric.setAttribute("aria-label",(INFO[id].title||id)+" — tap for explanation");
