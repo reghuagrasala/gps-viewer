@@ -615,3 +615,49 @@ html,body{background:#121316!important}body{min-height:100dvh!important;position
     display:block!important;
   }
 }
+
+
+/* v84 — reclaim a little more vertical space and show the current place in Weather */
+@media (min-height:901px){
+  .address-card{
+    height:42px!important;
+    flex-basis:42px!important;
+    min-height:42px!important;
+  }
+  .address-card .label-row{
+    height:18px!important;
+    min-height:18px!important;
+    flex-basis:18px!important;
+  }
+  .address-card .place-name{
+    height:18px!important;
+    max-height:18px!important;
+    font-size:13.5px!important;
+    line-height:18px!important;
+  }
+  .weather-main{
+    height:50px!important;
+    flex-basis:50px!important;
+    min-height:50px!important;
+    padding:3px 12px!important;
+    position:relative!important;
+  }
+  .weather-main .weather-info{
+    padding-right:150px!important;
+  }
+  .weather-main .weather-place{
+    position:absolute!important;
+    right:18px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    max-width:135px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    color:#dce8d8!important;
+    font-size:14px!important;
+    font-weight:600!important;
+    line-height:1.1!important;
+    text-align:right!important;
+  }
+}
