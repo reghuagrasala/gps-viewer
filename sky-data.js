@@ -4,15 +4,20 @@
   const $ = id => document.getElementById(id);
   let lat = null, lon = null, lastKey = "", timer = null;
   const rad = Math.PI / 180;
-  const fmtTime = d => d ? d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", hour12:true}) : "No event";
+  const fmtTime = d => d ? d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", hour12:true}) : "No event today";
   const fmtDuration = ms => {
     if (ms == null || !Number.isFinite(ms)) return "Unavailable";
     const mins = Math.max(0, Math.round(ms / 60000));
     return Math.floor(mins / 60) + "h " + String(mins % 60).padStart(2, "0") + "m";
   };
   function eventTime(body, direction, observer, start) {
-    try { const t = Astronomy.SearchRiseSet(body, observer, direction, start, 1); return t && t.date ? t.date : null; }
-    catch (_) { return null; }
+    try {
+      const event = Astronomy.SearchRiseSet(body, observer, direction, start, 1);
+      const t = event && event.date;
+      // Do not show an event just after midnight as if it occurred on the selected day.
+      return t && t.getFullYear() === start.getFullYear() &&
+        t.getMonth() === start.getMonth() && t.getDate() === start.getDate() ? t : null;
+    } catch (_) { return null; }
   }
   function render() {
     if (lat == null || lon == null || !window.Astronomy) return;
@@ -55,7 +60,7 @@
       skyMoonDistance: distanceKm == null ? "Unavailable" : distanceKm.toLocaleString() + " km"
     };
     Object.entries(values).forEach(([id, value]) => { const e = $(id); if (e) e.textContent = value; });
-    const stamp = $("skyUpdated"); if (stamp) stamp.textContent = "Calculated offline • " + now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    const stamp = $("skyUpdated"); if (stamp) stamp.textContent = "Offline astronomical model • " + now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
   }
   function setPosition(detail) {
     if (!detail || !Number.isFinite(detail.latitude) || !Number.isFinite(detail.longitude)) return;
