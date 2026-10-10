@@ -32,7 +32,7 @@
     const sunH = Astronomy.Horizon(now, observer, sunEq.ra, sunEq.dec, "normal");
     const phase = ((Astronomy.MoonPhase(now) % 360) + 360) % 360;
     const illum = Math.round(Astronomy.Illumination("Moon", now).phase_fraction * 100);
-    const phaseDays = (() => { try { const lastNew = Astronomy.SearchMoonPhase(0, now, -30); return lastNew && lastNew.date ? Math.max(0, (now.getTime() - lastNew.date.getTime()) / 86400000) : phase / 360 * 29.530588853; } catch (_) { return phase / 360 * 29.530588853; } })();
+    const phaseDays = (() => { const fallback = phase / 360 * 29.530588853; try { const lastNew = Astronomy.SearchMoonPhase(0, now, -35); const eventDate = lastNew && lastNew.date; if (!(eventDate instanceof Date) || !Number.isFinite(eventDate.getTime()) || eventDate > now) return fallback; const age = (now.getTime() - eventDate.getTime()) / 86400000; return Number.isFinite(age) && age >= 0 && age < 35 ? age : fallback; } catch (_) { return fallback; } })();
     let phaseName;
     if (phase < 22.5 || phase >= 337.5) phaseName = "New Moon";
     else if (phase < 67.5) phaseName = "Waxing Crescent";
