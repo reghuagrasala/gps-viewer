@@ -39,7 +39,9 @@
     else phaseName = "Waning Crescent";
     const moonEq = Astronomy.Equator("Moon", now, observer, true, true);
     const distanceKm = Number.isFinite(moonEq.dist) ? Math.round(moonEq.dist * 149597870.7) : null;
-    const solarNoon = sunrise && sunset ? new Date((sunrise.getTime() + sunset.getTime()) / 2) : null;
+    let solarNoon = null;
+    try { const transit = Astronomy.SearchHourAngle("Sun", observer, 0, midnight, 1); solarNoon = transit && transit.date ? transit.date : null; }
+    catch (_) { solarNoon = sunrise && sunset ? new Date((sunrise.getTime() + sunset.getTime()) / 2) : null; }
     const duration = sunrise && sunset ? sunset.getTime() - sunrise.getTime() : null;
     const values = {
       skySunrise: fmtTime(sunrise), skySunset: fmtTime(sunset), skyMoonrise: fmtTime(moonrise), skyMoonset: fmtTime(moonset),
