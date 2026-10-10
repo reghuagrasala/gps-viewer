@@ -27,7 +27,7 @@
     const sunH = Astronomy.Horizon(now, observer, sunEq.ra, sunEq.dec, "normal");
     const phase = ((Astronomy.MoonPhase(now) % 360) + 360) % 360;
     const illum = Math.round(Astronomy.Illumination("Moon", now).phase_fraction * 100);
-    const phaseDays = phase / 360 * 29.530588853;
+    const phaseDays = (() => { try { const lastNew = Astronomy.SearchMoonPhase(0, now, -30); return lastNew && lastNew.date ? Math.max(0, (now.getTime() - lastNew.date.getTime()) / 86400000) : phase / 360 * 29.530588853; } catch (_) { return phase / 360 * 29.530588853; } })();
     let phaseName;
     if (phase < 22.5 || phase >= 337.5) phaseName = "New Moon";
     else if (phase < 67.5) phaseName = "Waxing Crescent";
@@ -49,7 +49,7 @@
       skySunAltitude: Number.isFinite(sunH.altitude) ? sunH.altitude.toFixed(1) + "°" : "Unavailable",
       skySunAzimuth: Number.isFinite(sunH.azimuth) ? sunH.azimuth.toFixed(0) + "°" : "Unavailable",
       skyMoonPhase: phaseName, skyMoonIllumination: illum + "% illuminated",
-      skyMoonAge: "Approx. phase age " + phaseDays.toFixed(1) + " days",
+      skyMoonAge: "Age " + phaseDays.toFixed(1) + " days",
       skyMoonDistance: distanceKm == null ? "Unavailable" : distanceKm.toLocaleString() + " km"
     };
     Object.entries(values).forEach(([id, value]) => { const e = $(id); if (e) e.textContent = value; });
