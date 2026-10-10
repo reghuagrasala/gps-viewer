@@ -1,0 +1,60 @@
+/* Uniform sky-data tiles: match the GPS/weather metric cards while keeping the sky panel's cool blue background. */
+.sky-panel {
+  box-sizing: border-box;
+  padding: 14px !important;
+  border: 1px solid var(--card-border, #465b4b) !important;
+  border-radius: 20px !important;
+  background: var(--card-bg, #3b5140) !important;
+  color: var(--text-primary, #e2e8df) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.16);
+}
+.sky-panel #skyHeading {
+  color: var(--text-primary, #e2e8df) !important;
+  font-size: 17px !important;
+  font-weight: 650 !important;
+  margin: 0 0 5px !important;
+}
+.sky-panel #skyUpdated,
+.sky-panel > p:last-child {
+  color: var(--text-secondary, #c1d1c4) !important;
+}
+.sky-panel > div[style*="display:grid"] {
+  gap: 8px !important;
+}
+.sky-panel > div[style*="display:grid"] > div {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-width: 0 !important;
+  min-height: 76px !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--card-border, #536a58) !important;
+  background: var(--card-bg, #3b5140) !important;
+  color: var(--text-primary, #e2e8df) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+.sky-panel > div[style*="display:grid"] > div > div {
+  color: var(--text-secondary, #c1d1c4) !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  letter-spacing: .25px !important;
+  text-transform: none !important;
+  overflow-wrap: anywhere !important;
+}
+.sky-panel > div[style*="display:grid"] > div > strong {
+  display: block !important;
+  color: var(--metric-value, #f2d52e) !important;
+  font-size: 17px !important;
+  font-weight: 550 !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+@media (max-width: 380px) {
+  .sky-panel { padding: 12px !important; }
+  .sky-panel > div[style*="display:grid"] { gap: 7px !important; }
+  .sky-panel > div[style*="display:grid"] > div { min-height: 70px !important; padding: 10px !important; }
+  .sky-panel > div[style*="display:grid"] > div > strong { font-size: 15px !important; }
+}
